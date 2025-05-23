@@ -1,0 +1,490 @@
+﻿<?php require_once('../../Connections/SmecelNovo.php'); ?>
+<?php //include "../../sistema/funcoes/anoLetivo.php"; ?>
+<?php include('../../sistema/funcoes/url_base.php'); ?>
+<?php include('../../sistema/funcoes/inverteData.php'); ?>
+
+
+<?php
+//initialize the session
+if (!isset($_SESSION)) {
+  session_start();
+}
+
+// ** Logout the current user. **
+$logoutAction = $_SERVER['PHP_SELF']."?doLogout=true";
+if ((isset($_SERVER['QUERY_STRING'])) && ($_SERVER['QUERY_STRING'] != "")){
+  $logoutAction .="&". htmlentities($_SERVER['QUERY_STRING']);
+}
+
+if ((isset($_GET['doLogout'])) &&($_GET['doLogout']=="true")){
+  //to fully log out a visitor we need to clear the session varialbles
+  $_SESSION['MM_Username'] = NULL;
+  $_SESSION['MM_UserGroup'] = NULL;
+  $_SESSION['PrevUrl'] = NULL;
+  unset($_SESSION['MM_Username']);
+  unset($_SESSION['MM_UserGroup']);
+  unset($_SESSION['PrevUrl']);
+	
+  $logoutGoTo = "../index.php?saiu";
+  if ($logoutGoTo) {
+    header("Location: $logoutGoTo");
+    exit;
+  }
+}
+?>
+<?php
+if (!isset($_SESSION)) {
+  session_start();
+}
+$MM_authorizedUsers = "7";
+$MM_donotCheckaccess = "false";
+
+// *** Restrict Access To Page: Grant or deny access to this page
+function isAuthorized($strUsers, $strGroups, $UserName, $UserGroup) { 
+  // For security, start by assuming the visitor is NOT authorized. 
+  $isValid = False; 
+
+  // When a visitor has logged into this site, the Session variable MM_Username set equal to their username. 
+  // Therefore, we know that a user is NOT logged in if that Session variable is blank. 
+  if (!empty($UserName)) { 
+    // Besides being logged in, you may restrict access to only certain users based on an ID established when they login. 
+    // Parse the strings into arrays. 
+    $arrUsers = Explode(",", $strUsers); 
+    $arrGroups = Explode(",", $strGroups); 
+    if (in_array($UserName, $arrUsers)) { 
+      $isValid = true; 
+    } 
+    // Or, you may restrict access to only certain users based on their username. 
+    if (in_array($UserGroup, $arrGroups)) { 
+      $isValid = true; 
+    } 
+    if (($strUsers == "") && false) { 
+      $isValid = true; 
+    } 
+  } 
+  return $isValid; 
+}
+
+$MM_restrictGoTo = "../index.php?err";
+if (!((isset($_SESSION['MM_Username'])) && (isAuthorized("",$MM_authorizedUsers, $_SESSION['MM_Username'], $_SESSION['MM_UserGroup'])))) {   
+  $MM_qsChar = "?";
+  $MM_referrer = $_SERVER['PHP_SELF'];
+  if (strpos($MM_restrictGoTo, "?")) $MM_qsChar = "&";
+  if (isset($_SERVER['QUERY_STRING']) && strlen($_SERVER['QUERY_STRING']) > 0) 
+  $MM_referrer .= "?" . $_SERVER['QUERY_STRING'];
+  $MM_restrictGoTo = $MM_restrictGoTo. $MM_qsChar . "accesscheck=" . urlencode($MM_referrer);
+  header("Location: ". $MM_restrictGoTo); 
+  exit;
+}
+?>
+<?php
+if (!function_exists("GetSQLValueString")) {
+function GetSQLValueString($theValue, $theType, $theDefinedValue = "", $theNotDefinedValue = "") 
+{
+  if (PHP_VERSION < 6) {
+    $theValue = get_magic_quotes_gpc() ? stripslashes($theValue) : $theValue;
+  }
+
+  $theValue = function_exists("mysql_real_escape_string") ? mysql_real_escape_string($theValue) : mysql_escape_string($theValue);
+
+  switch ($theType) {
+    case "text":
+      $theValue = ($theValue != "") ? "'" . $theValue . "'" : "NULL";
+      break;    
+    case "long":
+    case "int":
+      $theValue = ($theValue != "") ? intval($theValue) : "NULL";
+      break;
+    case "double":
+      $theValue = ($theValue != "") ? doubleval($theValue) : "NULL";
+      break;
+    case "date":
+      $theValue = ($theValue != "") ? "'" . $theValue . "'" : "NULL";
+      break;
+    case "defined":
+      $theValue = ($theValue != "") ? $theDefinedValue : $theNotDefinedValue;
+      break;
+  }
+  return $theValue;
+}
+}
+
+$colname_ProfLogado = "-1";
+if (isset($_SESSION['MM_Username'])) {
+  $colname_ProfLogado = $_SESSION['MM_Username'];
+}
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_ProfLogado = sprintf("SELECT func_id, func_nome, func_email, func_foto FROM smc_func WHERE func_id = %s", GetSQLValueString($colname_ProfLogado, "text"));
+$ProfLogado = mysql_query($query_ProfLogado, $SmecelNovo) or die(mysql_error());
+$row_ProfLogado = mysql_fetch_assoc($ProfLogado);
+$totalRows_ProfLogado = mysql_num_rows($ProfLogado);
+
+if($totalRows_ProfLogado=="") {
+	header("Location:../index.php?loginErr");
+}
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Vinculos = "SELECT vinculo_id, vinculo_id_escola, vinculo_id_sec, vinculo_id_funcionario FROM smc_vinculo WHERE vinculo_id_funcionario = '$row_ProfLogado[func_id]'";
+$Vinculos = mysql_query($query_Vinculos, $SmecelNovo) or die(mysql_error());
+$row_Vinculos = mysql_fetch_assoc($Vinculos);
+$totalRows_Vinculos = mysql_num_rows($Vinculos);
+include "fnc/anoLetivo.php";
+
+$colname_Matricula = "-1";
+if (isset($_GET['cod'])) {
+  $colname_Matricula = $_GET['cod'];
+}
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Matricula = sprintf("
+SELECT vinculo_aluno_id, vinculo_aluno_id_aluno, vinculo_aluno_id_turma, vinculo_aluno_id_escola, vinculo_aluno_id_sec, 
+vinculo_aluno_ano_letivo, vinculo_aluno_transporte, vinculo_aluno_data, vinculo_aluno_hash, vinculo_aluno_verificacao, 
+vinculo_aluno_boletim, vinculo_aluno_situacao, vinculo_aluno_datatransferencia, vinculo_aluno_da_casa, vinculo_aluno_historico_transferencia, 
+vinculo_aluno_vacina_atualizada, aluno_id, aluno_nome, aluno_foto
+FROM smc_vinculo_aluno 
+INNER JOIN smc_aluno ON aluno_id = vinculo_aluno_id_aluno
+WHERE vinculo_aluno_hash = %s", GetSQLValueString($colname_Matricula, "text"));
+$Matricula = mysql_query($query_Matricula, $SmecelNovo) or die(mysql_error());
+$row_Matricula = mysql_fetch_assoc($Matricula);
+$totalRows_Matricula = mysql_num_rows($Matricula); 
+
+$colname_Disciplina = "-1";
+if (isset($_GET['disciplina'])) {
+  $colname_Disciplina = $_GET['disciplina'];
+}
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Disciplina = sprintf("SELECT disciplina_id, disciplina_area_conhecimento_id, disciplina_codigo_inep, disciplina_ordem, disciplina_nome, disciplina_nome_abrev, disciplina_id_campos_exp FROM smc_disciplina WHERE disciplina_id = %s", GetSQLValueString($colname_Disciplina, "int"));
+$Disciplina = mysql_query($query_Disciplina, $SmecelNovo) or die(mysql_error());
+$row_Disciplina = mysql_fetch_assoc($Disciplina);
+$totalRows_Disciplina = mysql_num_rows($Disciplina);
+
+$colname_Turma = "-1";
+if (isset($_GET['turma'])) {
+  $colname_Turma = $_GET['turma'];
+}
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Turma = sprintf("SELECT turma_id, turma_id_escola, turma_id_sec, turma_matriz_id, turma_nome, turma_etapa, turma_turno, turma_total_alunos, turma_ano_letivo FROM smc_turma WHERE turma_id = %s", GetSQLValueString($colname_Turma, "int"));
+$Turma = mysql_query($query_Turma, $SmecelNovo) or die(mysql_error());
+$row_Turma = mysql_fetch_assoc($Turma);
+$totalRows_Turma = mysql_num_rows($Turma);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Matriz = "SELECT matriz_id, matriz_id_secretaria, matriz_id_etapa, matriz_nome, matriz_obs, matriz_anoletivo, matriz_hash, matriz_dias_letivos, matriz_semanas_letivas, matriz_dias_semana, matriz_minutos_aula, matriz_aula_dia, matriz_criterio_avaliativo FROM smc_matriz WHERE matriz_id = '$row_Turma[turma_matriz_id]'";
+$Matriz = mysql_query($query_Matriz, $SmecelNovo) or die(mysql_error());
+$row_Matriz = mysql_fetch_assoc($Matriz);
+$totalRows_Matriz = mysql_num_rows($Matriz);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Criterios = "SELECT ca_id, ca_id_secretaria, ca_descricao, ca_qtd_periodos, ca_qtd_av_periodos, ca_nota_min_av, ca_nota_max_av, ca_calculo_media_periodo, ca_media_min_periodo, ca_arredonda_media, ca_aproxima_media, ca_min_pontos_aprovacao_final, ca_min_media_aprovacao_final, ca_nota_min_recuperacao_final, ca_detalhes, ca_grupo_etario, ca_grupo_conceito FROM smc_criterios_avaliativos WHERE ca_id = '$row_Matriz[matriz_criterio_avaliativo]'";
+$Criterios = mysql_query($query_Criterios, $SmecelNovo) or die(mysql_error());
+$row_Criterios = mysql_fetch_assoc($Criterios);
+$totalRows_Criterios = mysql_num_rows($Criterios);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Campos = "SELECT campos_exp_id, campos_exp_nome, campos_exp_mais, campos_exp_orientacoes, campos_exp_direitos FROM smc_campos_exp WHERE campos_exp_id = '$row_Disciplina[disciplina_id_campos_exp]'";
+$Campos = mysql_query($query_Campos, $SmecelNovo) or die(mysql_error());
+$row_Campos = mysql_fetch_assoc($Campos);
+$totalRows_Campos = mysql_num_rows($Campos);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_GrupoConceitos = "
+SELECT conceito_itens_id, conceito_itens_id_conceito, conceito_itens_descricao, conceito_itens_legenda, conceito_itens_peso 
+FROM smc_conceito_itens 
+WHERE conceito_itens_id_conceito = '$row_Criterios[ca_grupo_conceito]'";
+$GrupoConceitos = mysql_query($query_GrupoConceitos, $SmecelNovo) or die(mysql_error());
+$row_GrupoConceitos = mysql_fetch_assoc($GrupoConceitos);
+$totalRows_GrupoConceitos = mysql_num_rows($GrupoConceitos);
+
+do { 
+	$conceito[] = $row_GrupoConceitos['conceito_itens_peso']."|".$row_GrupoConceitos['conceito_itens_legenda']."|".$row_GrupoConceitos['conceito_itens_descricao'];
+} while ($row_GrupoConceitos = mysql_fetch_assoc($GrupoConceitos));
+
+$colname_Periodo = "1";
+if (isset($_GET['periodo'])) {
+  $colname_Periodo = $_GET['periodo'];
+} else {
+	$colname_Periodo = "1";
+	}
+
+
+?>
+
+<!DOCTYPE html>
+  <html lang="pt-br">
+    <head>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=UA-117872281-1"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'UA-117872281-1');
+</script>
+
+      <title><?php echo $row_ProfLogado['func_nome']?> - </title>
+    
+      <!--Import Google Icon Font-->
+      <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+      <!--Import materialize.css-->
+      <link type="text/css" rel="stylesheet" href="../css/materialize.min.css"  media="screen,projection"/>
+      <link type="text/css" rel="stylesheet" href="../css/app.css"  media="screen,projection"/>
+
+      <!--Let browser know website is optimized for mobile-->
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <link rel="apple-touch-icon" sizes="180x180" href="https://www.smecel.com.br/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://www.smecel.com.br/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://www.smecel.com.br/favicon-16x16.png">
+<link rel="manifest" href="https://www.smecel.com.br/site.webmanifest">
+
+<style>
+table {
+	width:100%;
+	border-collapse: collapse;
+	font-size:12px;
+}
+
+th, td {
+	border:1px solid #ccc;
+	padding:5px;
+	height:15px;
+	line-height:15px;
+}
+</style>
+
+</head>
+
+<body class="indigo lighten-5">
+    
+<?php include ("menu_top.php"); ?>
+  
+  <div class="section no-pad-bot" id="index-banner">
+    <div class="container">
+	  <div class="row white" style="margin: 10px 0;">
+	  
+	  <div class="col s12 m2 hide-on-small-only">
+	
+    <p>
+        <?php if ($row_ProfLogado['func_foto']=="") { ?>
+        <img src="<?php echo URL_BASE.'professor/fotos/' ?>semfoto.jpg" width="100%" class="hoverable">
+        <?php } else { ?>
+        <img src="<?php echo URL_BASE.'professor/fotos/' ?><?php echo $row_ProfLogado['func_foto']; ?>" width="100%" class="hoverable">
+        <?php } ?>
+	 
+	 <br>
+<small><a href="foto.php"><i class="tiny material-icons">photo_camera</i></a></small>		
+<small style="font-size:14px;">
+                  <?php echo current( str_word_count($row_ProfLogado['func_nome'],2)); ?>
+                  <?php $word = explode(" ", trim($row_ProfLogado['func_nome'])); echo $word[count($word)-1]; ?>
+        </small>
+	 
+	 </p>
+	 
+	 <?php include "menu_esq.php"; ?>
+	 
+	 
+	 </div>
+     
+    <div class="col s12 m10">
+	
+	  <h5>AVALIAÇÃO DO ALUNO</h5>
+	  
+	  <hr>
+
+	  <a href="index.php" class="waves-effect waves-light btn-small btn-flat"><i class="material-icons left">arrow_back</i> Voltar</a>    
+    
+
+    
+  
+    <blockquote> 
+    <span style="margin-right:10px; text-align:center; float:left;">
+    <?php if ($row_Matricula['aluno_foto']=="") { ?>
+    <img src="<?php echo '../../aluno/fotos/' ?>semfoto.jpg" class="" border="0" width="50">
+    <?php } else { ?>
+    <img src="<?php echo '../../aluno/fotos/' ?><?php echo $row_Matricula['aluno_foto']; ?>" class="" border="0" width="50">
+    <?php } ?>
+    <?php //echo $row_Alunos['aluno_nome']; ?>
+    </span> Turma: <strong><?php echo $row_Turma['turma_nome']; ?></strong><br>
+    Disciplina: <strong><?php echo $row_Disciplina['disciplina_nome']; ?></strong><br>
+    Aluno(a): <strong><?php echo $row_Matricula['aluno_nome']; ?></strong> 
+    </blockquote>
+
+<hr>
+
+<?php for ($i = 1; $i <= $row_Criterios['ca_qtd_periodos']; $i++) { ?>
+      <a class="btn <?php if ($colname_Periodo == $i) { echo "disabled"; } ?>" href="conceito.php?cod=<?php echo $colname_Matricula; ?>&disciplina=<?php echo $colname_Disciplina; ?>&turma=<?php echo $colname_Turma; ?>&periodo=<?php echo $i; ?>"><?php echo $i; ?>º</a>
+<?php } ?>
+
+<hr>
+
+<h3><?php echo $colname_Periodo; ?>º PERÍODO</h3>
+
+<?php do { ?>
+  
+  <div class="card-panel purple lighten-2 flow-text">
+  <h4><?php echo utf8_encode($row_Campos['campos_exp_nome']); ?></h4>
+  <small><?php echo utf8_encode($row_Campos['campos_exp_mais']); ?></small>
+  </div>
+  
+  	<?php
+    mysql_select_db($database_SmecelNovo, $SmecelNovo);
+	$query_Objetivos = "SELECT campos_exp_obj_id, campos_exp_obj_id_campos_exp, campos_exp_obj_nome, campos_exp_obj_faixa_et_cod, campos_exp_obj_faixa_et_nome, campos_exp_obj_campos_exp, campos_exp_obj_abordagem, campos_exp_obj_sugestoes FROM smc_campos_exp_objetivos WHERE campos_exp_obj_id_campos_exp = '$row_Campos[campos_exp_id]' AND campos_exp_obj_faixa_et_cod = '$row_Criterios[ca_grupo_etario]' ORDER BY campos_exp_obj_campos_exp ASC";
+	$Objetivos = mysql_query($query_Objetivos, $SmecelNovo) or die(mysql_error());
+	$row_Objetivos = mysql_fetch_assoc($Objetivos);
+	$totalRows_Objetivos = mysql_num_rows($Objetivos);
+
+	?>
+	<?php do { ?>
+    <div class="card-panel purple lighten-5 flow-text">
+    <p><strong><?php echo utf8_encode($row_Objetivos['campos_exp_obj_campos_exp']); ?></strong></p>
+    <small><?php echo utf8_encode( $row_Objetivos['campos_exp_obj_abordagem']); ?></small>
+    </div>
+   
+      
+    <?php
+    mysql_select_db($database_SmecelNovo, $SmecelNovo);
+	$query_Conceito = "
+	SELECT conc_id, conc_acomp_id, conc_matricula_id, conc_periodo, conc_avaliacao,
+	acomp_id, acomp_id_obj_aprend, acomp_descricao, 
+	campos_exp_obj_id, campos_exp_obj_id_campos_exp, campos_exp_obj_campos_exp 
+	FROM smc_conceito_aluno
+	INNER JOIN smc_acomp_proc_aprend ON acomp_id = conc_acomp_id
+	INNER JOIN smc_campos_exp_objetivos ON campos_exp_obj_id = acomp_id_obj_aprend
+	WHERE conc_matricula_id = '$row_Matricula[vinculo_aluno_id]' 
+	AND conc_periodo = '$colname_Periodo'
+	AND acomp_id_obj_aprend = '$row_Objetivos[campos_exp_obj_id]'
+	";
+	$Conceito = mysql_query($query_Conceito, $SmecelNovo) or die(mysql_error());
+	$row_Conceito = mysql_fetch_assoc($Conceito);
+	$totalRows_Conceito = mysql_num_rows($Conceito);
+	
+	
+	if($totalRows_Conceito == 0) {
+		//header("Location:index.php?erro");
+	}
+
+	?>  
+  <table class="striped">
+  <tbody>
+  <?php do { ?>
+    <tr>
+      <td width="100%">
+	  <blockquote><h6><strong><?php echo $row_Conceito['acomp_descricao']; ?></strong></h6></blockquote>
+	  
+      <?php foreach ($conceito as &$valor) { ?>
+      <?php $valor1 = explode("|", $valor); ?>
+		
+    <p>
+    <small>
+    <label>
+      <input class="with-gap" periodo="<?php echo $colname_Periodo; ?>" matricula="<?php echo $row_Matricula['vinculo_aluno_id']; ?>" name="<?php echo $row_Conceito['conc_acomp_id']; ?>" value="<?php echo $valor1[0]; ?>" type="radio" <?php if ( $row_Conceito['conc_avaliacao']==$valor1[0]) { echo "checked"; } ?> />
+      <span><?php echo $valor1[1]; ?>=<?php echo $valor1[2]; ?> <?php if ( $row_Conceito['conc_avaliacao']==$valor1[0]) { echo "<i class=\"material-icons right green-text\">check_box</i>"; } ?> </span>
+    </label>
+    </small>
+    </p>		
+		
+		
+		<?php } ?>
+      </td>
+    </tr>
+    <?php } while ($row_Conceito = mysql_fetch_assoc($Conceito)); ?>
+    </tbody>
+</table>
+<br>
+    
+    <?php } while ($row_Objetivos = mysql_fetch_assoc($Objetivos)); ?>
+    
+
+
+<?php } while ($row_Campos = mysql_fetch_assoc($Campos)); ?>
+<br>
+
+
+
+
+
+	<div id="status"></div>
+    </div>
+		
+
+
+     
+	  </div>
+    </div>
+  </div>
+  
+      <!--JavaScript at end of body for optimized loading-->
+   	  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+      <script type="text/javascript" src="../js/materialize.min.js"></script>
+<?php include ("rodape.php"); ?>      <script type="text/javascript" src="../js/app.js"></script>
+      	<script type="text/javascript">
+		$(document).ready(function(){
+			$(".dropdown-trigger").dropdown();
+			$('.sidenav').sidenav();
+		});
+	</script>
+    
+    
+    	                <script type="text/javascript">
+				
+$(document).ready(function(){
+$("input").click(function(){
+	
+	
+	
+	var objeto 		= $(this).attr('name');
+	var valor 	= $(this).attr('value');
+	var matricula = $(this).attr('matricula'); 
+	var periodo = $(this).attr('periodo'); 
+
+	//alert(matricula + "-" + objeto + "-" + valor + "-" + periodo);
+	
+	
+
+
+	
+	$.ajax({
+		type : 'POST',
+        url  : 'fnc/lancaConceito.php',
+        data : {
+			objeto			:objeto,
+			valor			:valor,
+			matricula		:matricula,
+			periodo			:periodo
+			},
+			success:function(data){
+				$('#status').html(data);
+				
+				setTimeout(function(){
+					  $("#status").html("");					
+					},15000);
+				
+				}
+		})
+	
+	  });
+});
+
+</script>
+    
+    
+    </body>
+  </html>
+  <?php
+mysql_free_result($ProfLogado);
+mysql_free_result($Criterios);
+
+mysql_free_result($Campos);
+
+mysql_free_result($Objetivos);
+
+mysql_free_result($GrupoConceitos);
+
+mysql_free_result($Conceito);
+mysql_free_result($Matriz);
+mysql_free_result($Turma);
+mysql_free_result($Disciplina);
+mysql_free_result($Matricula);
+mysql_free_result($Vinculos);
+
+
+?>

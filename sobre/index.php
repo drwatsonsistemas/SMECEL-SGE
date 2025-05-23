@@ -1,0 +1,1163 @@
+<?php
+require_once('../Connections/SmecelNovo.php');
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Entidades = "SELECT sec_id, sec_nome, sec_prefeitura, sec_cep, sec_uf, sec_cidade, sec_endereco, sec_num, sec_bairro, sec_telefone1, sec_telefone2, sec_email, sec_nome_secretario, sec_ibge_municipio, sec_regra_media, sec_bloqueada FROM smc_sec WHERE sec_bloqueada = 'N' AND sec_logo IS NOT NULL";
+$Entidades = mysql_query($query_Entidades, $SmecelNovo) or die(mysql_error());
+$row_Entidades = mysql_fetch_assoc($Entidades);
+$totalRows_Entidades = mysql_num_rows($Entidades);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Escolas = "SELECT escola_id, escola_id_sec, escola_nome, escola_cep, escola_endereco, escola_num, escola_bairro, escola_telefone1, escola_telefone2, escola_email, escola_inep, escola_cnpj, escola_logo, escola_ue, escola_situacao, escola_localizacao, escola_ibge_municipio FROM smc_escola";
+$Escolas = mysql_query($query_Escolas, $SmecelNovo) or die(mysql_error());
+$row_Escolas = mysql_fetch_assoc($Escolas);
+$totalRows_Escolas = mysql_num_rows($Escolas);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Turmas = "SELECT turma_id, turma_id_escola, turma_id_sec, turma_matriz_id, turma_nome, turma_etapa, turma_turno, turma_total_alunos, turma_ano_letivo FROM smc_turma";
+$Turmas = mysql_query($query_Turmas, $SmecelNovo) or die(mysql_error());
+$row_Turmas = mysql_fetch_assoc($Turmas);
+$totalRows_Turmas = mysql_num_rows($Turmas);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Alunos = "SELECT aluno_id, aluno_cod_inep, aluno_cpf, aluno_nome, aluno_nascimento, aluno_filiacao1, aluno_filiacao2, aluno_sexo, aluno_raca, aluno_nacionalidade, aluno_uf_nascimento, aluno_municipio_nascimento, aluno_municipio_nascimento_ibge, aluno_aluno_com_deficiencia, aluno_nis, aluno_identidade, aluno_emissor, aluno_uf_emissor, aluno_data_espedicao, aluno_tipo_certidao, aluno_termo, aluno_folhas, aluno_livro, aluno_emissao_certidao, aluno_uf_cartorio, aluno_mucicipio_cartorio, aluno_nome_cartorio, aluno_num_matricula_modelo_novo, aluno_localizacao, aluno_cep, aluno_endereco, aluno_numero, aluno_complemento, aluno_bairro, aluno_uf, aluno_municipio, aluno_telefone, aluno_celular, aluno_email, aluno_sus, aluno_tipo_deficiencia, aluno_laudo, aluno_alergia, aluno_alergia_qual, aluno_destro, aluno_emergencia_avisar, aluno_emergencia_tel1, aluno_emergencia_tel2, aluno_prof_mae, aluno_tel_mae, aluno_escolaridade_mae, aluno_rg_mae, aluno_cpf_mae, aluno_prof_pai, aluno_tel_pai, aluno_escolaridade_pai, aluno_rg_pai, aluno_cpf_pai, aluno_hash, aluno_recebe_bolsa_familia, aluno_foto, aluno_def_bvisao, aluno_def_cegueira, aluno_def_auditiva, aluno_def_fisica, aluno_def_intelectual, aluno_def_surdez, aluno_def_surdocegueira, aluno_def_autista, aluno_def_superdotacao FROM smc_aluno";
+$Alunos = mysql_query($query_Alunos, $SmecelNovo) or die(mysql_error());
+$row_Alunos = mysql_fetch_assoc($Alunos);
+$totalRows_Alunos = mysql_num_rows($Alunos);
+
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Matriculas = "SELECT * FROM smc_vinculo_aluno";
+$Matriculas = mysql_query($query_Matriculas, $SmecelNovo) or die(mysql_error());
+$row_Matriculas = mysql_fetch_assoc($Matriculas);
+$totalRows_Matriculas = mysql_num_rows($Matriculas);
+
+
+
+/*
+ *Author: Paulo Amaral
+ *Data: 14/12/2022
+ *Desc: Pegar as logos das prefeituras cadastradas
+ */
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_EntidadesLogo = "SELECT sec_id, sec_nome, sec_prefeitura, sec_cep, sec_uf, sec_cidade, sec_endereco, sec_num, sec_bairro, sec_telefone1, sec_telefone2, sec_email, sec_nome_secretario, sec_ibge_municipio, sec_regra_media, sec_logo FROM smc_sec WHERE sec_logo IS NOT NULL LIMIT 1";
+$EntidadesLogo = mysql_query($query_EntidadesLogo, $SmecelNovo) or die(mysql_error());
+$row_EntidadesLogo = mysql_fetch_array($EntidadesLogo);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_EntidadesLogo2 = "SELECT sec_id, sec_nome, sec_prefeitura, sec_cep, sec_uf, sec_cidade, sec_endereco, sec_num, sec_bairro, sec_telefone1, sec_telefone2, sec_email, sec_nome_secretario, sec_ibge_municipio, sec_regra_media, sec_logo FROM smc_sec WHERE sec_logo IS NOT NULL";
+$EntidadesLogo2 = mysql_query($query_EntidadesLogo2, $SmecelNovo) or die(mysql_error());
+$row_EntidadesLogo2 = mysql_fetch_array($EntidadesLogo2);
+
+
+?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="initial-scale=1, maximum-scale=1">
+
+	<title>SMECEL - Sistema de Gestão Escolar Municipal</title>
+	<meta name="description" content="Tenha o controle das informações Educacionais em seu município na palma da mão" />
+
+	<link rel="canonical" href="https://www.smecel.com.br/sobre" />
+	<meta property="og:locale" content="pt_BR" />
+	<meta property="og:type" content="website" />
+	<meta property="og:title" content="SMECEL - Sistema de Gestão Escolar Municipal" />
+	<meta property="og:description"
+		content="Tenha o controle das informações Educacionais em seu município na palma da mão" />
+	<meta property="og:url" content="https://www.smecel.com.br/sobre" />
+	<meta property="og:site_name" content="SMECEL" />
+	<meta property="og:image" content="https://www.smecel.com.br/img/quadro1.jpg" />
+	<meta property="og:image:width" content="600" />
+	<meta property="og:image:height" content="400" />
+	<meta property="og:image:type" content="image/jpeg" />
+	<meta name="author" content="DR WATSON" />
+
+	<link rel="apple-touch-icon" sizes="180x180" href="https://www.smecel.com.br/apple-touch-icon.png">
+	<link rel="icon" type="image/png" sizes="32x32" href="https://www.smecel.com.br/favicon-32x32.png">
+	<link rel="icon" type="image/png" sizes="16x16" href="https://www.smecel.com.br/favicon-16x16.png">
+	<link rel="manifest" href="https://www.smecel.com.br/site.webmanifest">
+
+
+	<!-- Tailwind CSS via CDN -->
+	<script src="https://cdn.tailwindcss.com"></script>
+
+	<!-- Configure Tailwind -->
+	<script>
+		tailwind.config = {
+			theme: {
+				extend: {
+					colors: {
+						primary: '#0057b8',
+						secondary: '#4caf50',
+						accent: '#ff8c00',
+						danger: '#e63b3b',
+						warning: '#ffd600',
+						info: '#9c27b0'
+					},
+					fontFamily: {
+						sans: ['Inter', 'sans-serif'],
+						display: ['Poppins', 'sans-serif']
+					}
+				}
+			}
+		}
+	</script>
+
+	<!-- Google Fonts -->
+	<link
+		href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap"
+		rel="stylesheet">
+
+	<!-- Font Awesome for icons -->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+	<style>
+		/* Custom CSS */
+		html {
+			scroll-behavior: smooth;
+		}
+
+		/* Logo rainbow colors */
+		.logo-text span:nth-child(1) {
+			color: #0057b8;
+			/* blue */
+		}
+
+		.logo-text span:nth-child(2) {
+			color: #e63b3b;
+			/* red */
+		}
+
+		.logo-text span:nth-child(3) {
+			color: #ff8c00;
+			/* orange */
+		}
+
+		.logo-text span:nth-child(4) {
+			color: #4caf50;
+			/* green */
+		}
+
+		.logo-text span:nth-child(5) {
+			color: #ffd600;
+			/* yellow */
+		}
+
+		.logo-text span:nth-child(6) {
+			color: #9c27b0;
+			/* purple */
+		}
+
+		/* Custom scrollbar */
+		::-webkit-scrollbar {
+			width: 10px;
+		}
+
+		::-webkit-scrollbar-track {
+			background: #f1f1f1;
+		}
+
+		::-webkit-scrollbar-thumb {
+			background: #0057b8;
+			border-radius: 5px;
+		}
+
+		::-webkit-scrollbar-thumb:hover {
+			background: #00438f;
+		}
+
+		/* Animation for fade-in effects */
+		.animated-element {
+			opacity: 0;
+			transform: translateY(20px);
+			transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+		}
+
+		.animated-element.visible {
+			opacity: 1;
+			transform: translateY(0);
+		}
+
+		/* Partner logo hover effect */
+		.partner-logo {
+			filter: grayscale(100%);
+			transition: all 0.3s ease;
+		}
+
+		.partner-logo:hover {
+			filter: grayscale(0%);
+			transform: scale(1.1);
+		}
+
+		/* Pulse animation */
+		@keyframes pulse-subtle {
+
+			0%,
+			100% {
+				opacity: 1;
+				transform: scale(1);
+			}
+
+			50% {
+				opacity: 0.9;
+				transform: scale(1.03);
+			}
+		}
+
+		.animate-pulse-subtle {
+			animation: pulse-subtle 3s infinite ease-in-out;
+		}
+	</style>
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+		integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+
+</head>
+
+<body class="bg-gray-50 text-gray-800 font-sans">
+	<!-- Header -->
+	<header id="header" class="fixed w-full top-0 z-50 transition-all duration-300 bg-white shadow-md">
+		<div class="container mx-auto px-4 sm:px-6 py-3 flex items-center justify-between">
+			<a href="#" class="flex items-center space-x-2">
+				<img src="https://smecel.com.br/img/logo_smecel_background_flattened.png" alt="Logotipo SMECEL"
+					class="h-8 w-auto">
+			</a>
+
+			<nav class="hidden md:flex items-center space-x-6">
+				<a href="#about" class="text-gray-700 hover:text-primary font-medium transition-colors">Sobre</a>
+				<a href="#features" class="text-gray-700 hover:text-primary font-medium transition-colors">Recursos</a>
+				<a href="#statistics"
+					class="text-gray-700 hover:text-primary font-medium transition-colors">Estatísticas</a>
+				<a href="#modules" class="text-gray-700 hover:text-primary font-medium transition-colors">Módulos</a>
+				<a href="#partners" class="text-gray-700 hover:text-primary font-medium transition-colors">Parceiros</a>
+				<!-- <a href="#contact"
+					class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors">Contato</a> -->
+			</nav>
+
+			<button id="mobile-menu-button" class="md:hidden text-gray-700 hover:text-primary">
+				<i class="fas fa-bars text-2xl"></i>
+			</button>
+		</div>
+
+		<!-- Mobile Menu -->
+		<div id="mobile-menu" class="md:hidden bg-white hidden">
+			<div class="container mx-auto px-4 py-4 flex flex-col space-y-4">
+				<a href="#about" class="text-gray-700 hover:text-primary font-medium">Sobre</a>
+				<a href="#features" class="text-gray-700 hover:text-primary font-medium">Recursos</a>
+				<a href="#statistics" class="text-gray-700 hover:text-primary font-medium">Estatísticas</a>
+				<a href="#modules" class="text-gray-700 hover:text-primary font-medium">Módulos</a>
+				<a href="#partners" class="text-gray-700 hover:text-primary font-medium">Parceiros</a>
+				<!-- <a href="#contact"
+					class="bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 inline-block text-center">Contato</a> -->
+			</div>
+		</div>
+	</header>
+
+	<!-- Hero Section -->
+	<section id="hero" class="pt-24 mt-12 bg-gradient-to-br from-blue-50 to-white min-h-[80vh] flex items-center">
+		<div class="container mx-auto px-4 sm:px-6 py-12 sm:py-20">
+			<div class="flex flex-col lg:flex-row items-center gap-12">
+				<div class="lg:w-1/2 space-y-6 animated-element">
+					<h1 class="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-gray-900 leading-tight">
+						Sistema Completo de <span class="text-primary">Gestão Escolar</span>
+					</h1>
+					<p class="text-xl text-gray-600 max-w-xl">
+						Uma solução completa para secretarias de educação e escolas, integrando todos os processos
+						educacionais em uma única plataforma.
+					</p>
+					<div class="flex flex-wrap gap-4">
+						<a href="https://wa.me/557381489157?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20sobre%20o%20sistema%20de%20gest%C3%A3o%20escolar%20SMECEL"
+							class="bg-primary text-white px-6 py-3 rounded-lg text-lg font-medium hover:bg-primary/90 transition-colors inline-flex items-center">
+							<i class="fas fa-headset mr-2"></i> Fale Conosco
+						</a>
+						<a href="#features"
+							class="bg-white text-primary border border-primary px-6 py-3 rounded-lg text-lg font-medium hover:bg-gray-50 transition-colors inline-flex items-center">
+							<i class="fas fa-info-circle mr-2"></i> Saiba Mais
+						</a>
+					</div>
+				</div>
+				<div class="lg:w-1/2 animated-element">
+					<img src="https://smecel.com.br/img/logo_smecel_background_flattened.png" alt="SMECEL Sistema"
+						class="w-full h-auto animate-pulse-subtle">
+				</div>
+			</div>
+		</div>
+	</section>
+
+
+
+	<!-- Features Section -->
+	<section id="features" class="py-16 sm:py-24 bg-gradient-to-br from-gray-50 to-blue-50">
+		<div class="container mx-auto px-4 sm:px-6">
+			<div class="max-w-3xl mx-auto text-center mb-16 animated-element">
+				<h2 class="text-3xl sm:text-4xl font-display font-bold mb-6">Tudo que você precisa está no SMECEL</h2>
+				<p class="text-lg text-gray-600">
+					Nossa plataforma reúne ferramentas essenciais para a gestão educacional eficiente, oferecendo
+					soluções integradas e personalizáveis.
+				</p>
+			</div>
+
+			<div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+				<!-- Feature Card 1 -->
+				<div
+					class="bg-white p-6 rounded-xl shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100 animated-element">
+					<div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+						<i class="fas fa-mobile-alt text-primary text-2xl"></i>
+					</div>
+					<h3 class="text-xl font-bold mb-3">Acessibilidade Total</h3>
+					<p class="text-gray-600">
+						Acesse o sistema de qualquer dispositivo - computadores, tablets ou smartphones, garantindo que
+						a informação esteja sempre disponível.
+					</p>
+				</div>
+
+				<!-- Feature Card 2 -->
+				<div
+					class="bg-white p-6 rounded-xl shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100 animated-element">
+					<div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+						<i class="fas fa-chart-bar text-primary text-2xl"></i>
+					</div>
+					<h3 class="text-xl font-bold mb-3">Relatórios e Gráficos</h3>
+					<p class="text-gray-600">
+						Dados transformados em informações úteis através de relatórios dinâmicos e gráficos interativos
+						para tomada de decisões.
+					</p>
+				</div>
+
+				<!-- Feature Card 3 -->
+				<div
+					class="bg-white p-6 rounded-xl shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100 animated-element">
+					<div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+						<i class="fas fa-bus text-primary text-2xl"></i>
+					</div>
+					<h3 class="text-xl font-bold mb-3">Transporte Escolar</h3>
+					<p class="text-gray-600">
+						Gerenciamento completo de rotas, veículos e motoristas, garantindo segurança e eficiência no
+						transporte dos alunos.
+					</p>
+				</div>
+
+				<!-- Feature Card 4 -->
+				<div
+					class="bg-white p-6 rounded-xl shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100 animated-element">
+					<div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+						<i class="fas fa-laptop text-primary text-2xl"></i>
+					</div>
+					<h3 class="text-xl font-bold mb-3">Ambiente Virtual</h3>
+					<p class="text-gray-600">
+						Plataforma de aprendizagem online integrada, facilitando a comunicação entre professores e
+						alunos e o acesso a materiais didáticos.
+					</p>
+				</div>
+
+				<!-- Feature Card 5 -->
+				<div
+					class="bg-white p-6 rounded-xl shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100 animated-element">
+					<div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+						<i class="fas fa-utensils text-primary text-2xl"></i>
+					</div>
+					<h3 class="text-xl font-bold mb-3">Merenda Escolar</h3>
+					<p class="text-gray-600">
+						Controle de estoque, planejamento de cardápio e gestão nutricional, garantindo alimentação de
+						qualidade nas escolas.
+					</p>
+				</div>
+
+				<!-- Feature Card 6 -->
+				<div
+					class="bg-white p-6 rounded-xl shadow-md transition-all duration-300 hover:shadow-xl border border-gray-100 animated-element">
+					<div class="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+						<i class="fas fa-users text-primary text-2xl"></i>
+					</div>
+					<h3 class="text-xl font-bold mb-3">Módulos Integrados</h3>
+					<p class="text-gray-600">
+						Todos os módulos se comunicam entre si, criando um sistema unificado que elimina redundâncias e
+						inconsistências nos dados.
+					</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Statistics Section -->
+	<section id="statistics" class="py-16 sm:py-24 bg-primary text-white">
+		<div class="container mx-auto px-4 sm:px-6">
+			<div class="max-w-3xl mx-auto text-center mb-16 animated-element">
+				<h2 class="text-3xl sm:text-4xl font-display font-bold mb-6">Onde Estamos</h2>
+				<p class="text-lg opacity-90">
+					O SMECEL está presente em diversas localidades, transformando a gestão escolar de municípios por
+					todo o Brasil.
+				</p>
+			</div>
+
+			<div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+				<!-- Stat Card 1 -->
+				<div class="bg-white/10 backdrop-blur-lg p-6 rounded-xl animated-element">
+					<div class="text-3xl sm:text-4xl md:text-5xl font-bold mb-2">
+						<span class="stat-counter" data-target="<?= $totalRows_Entidades ?>">0</span>
+					</div>
+					<p class="text-lg opacity-90">Municípios</p>
+				</div>
+
+				<!-- Stat Card 2 -->
+				<div class="bg-white/10 backdrop-blur-lg p-6 rounded-xl animated-element">
+					<div class="text-3xl sm:text-4xl md:text-5xl font-bold mb-2">
+						<span class="stat-counter" data-target="<?= $totalRows_Escolas ?>">0</span>
+					</div>
+					<p class="text-lg opacity-90">Escolas</p>
+				</div>
+
+				<!-- Stat Card 3 -->
+				<div class="bg-white/10 backdrop-blur-lg p-6 rounded-xl animated-element">
+					<div class="text-3xl sm:text-4xl md:text-5xl font-bold mb-2">
+						<span class="stat-counter" data-target="<?= $totalRows_Turmas ?>">0</span>
+					</div>
+					<p class="text-lg opacity-90">Turmas</p>
+				</div>
+
+				<!-- Stat Card 4 -->
+				<div class="bg-white/10 backdrop-blur-lg p-6 rounded-xl animated-element">
+					<div class="text-3xl sm:text-4xl md:text-5xl font-bold mb-2">
+						<span class="stat-counter" data-target="<?= $totalRows_Alunos ?>">0</span>+
+					</div>
+					<p class="text-lg opacity-90">Alunos</p>
+				</div>
+			</div>
+
+			<div class="mt-16 bg-white/10 backdrop-blur-lg p-4 sm:p-8 rounded-xl animated-element">
+				<!-- <div class="text-center mb-6">
+					<h3 class="text-2xl font-bold">Presença Nacional</h3>
+					<p class="opacity-90">Estados onde o SMECEL está presente</p>
+				</div> -->
+				<div class="text-center mb-6">
+					<h3 class="text-2xl font-bold">Presença na Bahia</h3>
+					<p class="opacity-90">Cidades onde o SMECEL está presente</p>
+				</div>
+				<div class="aspect-video bg-white/5 rounded-lg flex items-center justify-center">
+					<!-- Mapa interativo -->
+					<div id="map" class="w-full h-full rounded-lg"></div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Modules Section -->
+	<section id="modules" class="py-16 sm:py-24 bg-white">
+		<div class="container mx-auto px-4 sm:px-6">
+			<div class="max-w-3xl mx-auto text-center mb-16 animated-element">
+				<h2 class="text-3xl sm:text-4xl font-display font-bold mb-6">Módulos Integrados</h2>
+				<p class="text-lg text-gray-600">
+					O SMECEL oferece uma série de módulos que se comunicam entre si, fornecendo uma solução completa
+					para a gestão educacional.
+				</p>
+			</div>
+
+			<!-- Tabs Navigation -->
+			<div class="flex flex-wrap justify-center gap-2 mb-10">
+				<button class="module-tab active px-4 py-2 rounded-md bg-primary text-white"
+					data-tab="secretaria">Secretaria</button>
+				<button class="module-tab px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
+					data-tab="escola">Escola</button>
+				<button class="module-tab px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
+					data-tab="professor">Professor</button>
+				<button class="module-tab px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
+					data-tab="aluno">Aluno</button>
+				<button class="module-tab px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
+					data-tab="pse">PSE</button>
+				<button class="module-tab px-4 py-2 rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
+					data-tab="conselho">Conselho Tutelar</button>
+			</div>
+
+			<!-- Tab Contents -->
+			<div class="tab-contents">
+				<!-- Secretaria Tab -->
+				<div class="module-content active" id="secretaria-content">
+					<div class="grid md:grid-cols-2 gap-10 items-center">
+						<div class="space-y-6 animated-element">
+							<h3 class="text-2xl font-bold text-gray-800">Painel da Secretaria</h3>
+							<p class="text-gray-600">
+								O módulo da Secretaria oferece uma visão ampla de toda a rede de ensino, permitindo
+								acompanhar em tempo real o desempenho das escolas, alunos e professores.
+							</p>
+							<ul class="space-y-3">
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Visão geral de todas as unidades escolares</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Gestão de matrículas e transferências entre escolas</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Relatórios consolidados para prestação de contas</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Gerenciamento do transporte escolar municipal</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Controle centralizado da merenda escolar</span>
+								</li>
+							</ul>
+						</div>
+						<div class="animated-element">
+							<img src="images/sec-educacao.png" alt="Painel da Secretaria"
+								class="w-full h-auto rounded-xl shadow-lg">
+						</div>
+					</div>
+				</div>
+
+				<!-- Escola Tab -->
+				<div class="module-content hidden" id="escola-content">
+					<div class="grid md:grid-cols-2 gap-10 items-center">
+						<div class="space-y-6 animated-element">
+							<h3 class="text-2xl font-bold text-gray-800">Painel da Escola</h3>
+							<p class="text-gray-600">
+								Este módulo permite que diretores e coordenadores gerenciem todos os aspectos da unidade
+								escolar, facilitando o trabalho administrativo e pedagógico.
+							</p>
+							<ul class="space-y-3">
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Controle de frequência de alunos e professores</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Gestão de horários e alocação de salas</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Registro e acompanhamento do desempenho escolar</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Comunicação direta com pais e responsáveis</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Controle de patrimônio da escola</span>
+								</li>
+							</ul>
+						</div>
+						<div class="animated-element">
+							<img src="images/sec-escola.png" alt="Painel da Escola"
+								class="w-full h-auto rounded-xl shadow-lg">
+						</div>
+					</div>
+				</div>
+
+				<!-- Professor Tab -->
+				<div class="module-content hidden" id="professor-content">
+					<div class="grid md:grid-cols-2 gap-10 items-center">
+						<div class="space-y-6 animated-element">
+							<h3 class="text-2xl font-bold text-gray-800">Painel do Professor</h3>
+							<p class="text-gray-600">
+								Uma interface intuitiva para professores gerenciarem suas turmas, registrar notas e
+								frequências, e acompanhar o desenvolvimento de seus alunos.
+							</p>
+							<ul class="space-y-3">
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Diário de classe digital</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Registro de conteúdos ministrados</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Lançamento de notas e frequência</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Compartilhamento de materiais didáticos</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Comunicação com alunos e responsáveis</span>
+								</li>
+							</ul>
+						</div>
+						<div class="animated-element">
+							<img src="images/sec-professor.png" alt="Painel do Professor"
+								class="w-full h-auto rounded-xl shadow-lg">
+						</div>
+					</div>
+				</div>
+
+				<!-- Aluno Tab -->
+				<div class="module-content hidden" id="aluno-content">
+					<div class="grid md:grid-cols-2 gap-10 items-center">
+						<div class="space-y-6 animated-element">
+							<h3 class="text-2xl font-bold text-gray-800">Painel do Aluno</h3>
+							<p class="text-gray-600">
+								Permite que os alunos acompanhem seu desempenho escolar, acessem materiais de estudo e
+								mantenham-se informados sobre atividades e eventos escolares.
+							</p>
+							<ul class="space-y-3">
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Visualização de notas e frequência</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Acesso a tarefas e trabalhos</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Calendário de provas e eventos</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Biblioteca digital de materiais</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Comunicação com professores</span>
+								</li>
+							</ul>
+						</div>
+						<div class="animated-element">
+							<img src="images/sec-aluno.png" alt="Painel do Aluno"
+								class="w-full h-auto rounded-xl shadow-lg">
+						</div>
+					</div>
+				</div>
+
+				<!-- PSE Tab -->
+				<div class="module-content hidden" id="pse-content">
+					<div class="grid md:grid-cols-2 gap-10 items-center">
+						<div class="space-y-6 animated-element">
+							<h3 class="text-2xl font-bold text-gray-800">Painel PSE</h3>
+							<p class="text-gray-600">
+								O módulo de Programa Saúde na Escola (PSE) integra ações de saúde e educação,
+								facilitando o acompanhamento da saúde dos estudantes.
+							</p>
+							<ul class="space-y-3">
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Cadastro de profissionais de saúde</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Registro de atendimentos e procedimentos</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Acompanhamento de campanhas de vacinação</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Controle de dados antropométricos</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Relatórios para o Ministério da Saúde</span>
+								</li>
+							</ul>
+						</div>
+						<div class="animated-element">
+							<img src="images/sec-pse.png" alt="Painel PSE" class="w-full h-auto rounded-xl shadow-lg">
+						</div>
+					</div>
+				</div>
+
+				<!-- Conselho Tutelar Tab -->
+				<div class="module-content hidden" id="conselho-content">
+					<div class="grid md:grid-cols-2 gap-10 items-center">
+						<div class="space-y-6 animated-element">
+							<h3 class="text-2xl font-bold text-gray-800">Painel do Conselho Tutelar</h3>
+							<p class="text-gray-600">
+								Permite que o Conselho Tutelar acompanhe a frequência escolar e situações que necessitam
+								de intervenção, facilitando a proteção dos direitos de crianças e adolescentes.
+							</p>
+							<ul class="space-y-3">
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Alertas de infrequência escolar</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Registro e acompanhamento de ocorrências</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Gestão de medidas de proteção</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Comunicação com escolas e Secretaria</span>
+								</li>
+								<li class="flex items-start">
+									<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+									<span>Relatórios para órgãos de proteção</span>
+								</li>
+							</ul>
+						</div>
+						<div class="animated-element">
+							<img src="images/sec-conselho.png" alt="Painel do Conselho Tutelar"
+								class="w-full h-auto rounded-xl shadow-lg">
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- About Section -->
+	<section id="about" class="py-16 sm:py-24 bg-white">
+		<div class="container mx-auto px-4 sm:px-6">
+			<div class="max-w-3xl mx-auto text-center mb-16 animated-element">
+				<h2 class="text-3xl sm:text-4xl font-display font-bold mb-6">Sobre o SMECEL</h2>
+				<p class="text-lg text-gray-600">
+					O Sistema de Gestão Escolar SMECEL foi desenvolvido para atender às necessidades específicas da
+					educação pública, proporcionando ferramentas eficientes para gestão, comunicação e acompanhamento
+					pedagógico.
+				</p>
+			</div>
+
+			<div class="grid md:grid-cols-2 gap-12 items-center">
+				<div class="space-y-6 animated-element">
+					<h3 class="text-2xl font-display font-bold text-gray-800">Nossa História</h3>
+					<p class="text-gray-600">
+						O desenvolvimento do SMECEL teve início por volta de 2015, destinado inicialmente ao uso na
+						Secretaria de Educação do município de Itagimirim-BA. Esse processo foi conduzido através do
+						contato direto com Coordenadores, Secretários Escolares, Professores, Alunos e demais atores
+						diretamente envolvidos na área educacional. Dessa forma, o SMECEL evoluiu para se tornar uma
+						ferramenta integralmente adaptada à realidade cotidiana dos municípios, refletindo as
+						necessidades e demandas específicas do ambiente educacional.
+					</p>
+					<p class="text-gray-600">
+						É relevante destacar que o sistema continua a evoluir diariamente, sendo aprimorado com base nas
+						necessidades e particularidades de cada município. Essa abordagem dinâmica garante que o SMECEL
+						permaneça atualizado e alinhado com as demandas em constante mudança no campo da educação.
+					</p>
+					<!-- <ul class="space-y-3">
+						<li class="flex items-start">
+							<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+							<span>Sistema 100% web, acessível de qualquer dispositivo</span>
+						</li>
+						<li class="flex items-start">
+							<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+							<span>Atende às exigências do Ministério da Educação</span>
+						</li>
+						<li class="flex items-start">
+							<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+							<span>Adaptável à realidade de cada município</span>
+						</li>
+						<li class="flex items-start">
+							<i class="fas fa-check-circle text-primary mt-1 mr-2"></i>
+							<span>Suporte técnico especializado em educação</span>
+						</li>
+					</ul> -->
+				</div>
+				<div class="animated-element">
+					<img src="https://placehold.co/600x500/e6f1ff/0057b8?text=Nossa+História" alt="História do SMECEL"
+						class="w-full h-auto rounded-xl shadow-lg">
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<!-- Partners Section -->
+	<section id="partners" class="py-16 sm:py-24 bg-gray-50">
+		<div class="container mx-auto px-4 sm:px-6">
+			<div class="max-w-3xl mx-auto text-center mb-16 animated-element">
+				<h2 class="text-3xl sm:text-4xl font-display font-bold mb-6">Municípios Parceiros</h2>
+				<p class="text-lg text-gray-600">
+					Secretarias de Educação que já confiam no SMECEL para gerenciar sua rede de ensino.
+				</p>
+			</div>
+
+			<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center">
+				<?php
+				$delay = 0; // Inicializa o delay para animação
+				do { ?>
+					<!-- Item do Parceiro -->
+					<div class="flex flex-col items-center justify-center p-4 animated-element"
+						style="animation-delay: <?php echo $delay; ?>s;">
+						<img src="../img/logo/secretaria/<?php echo htmlspecialchars($row_EntidadesLogo2['sec_logo']); ?>"
+							alt="Logotipo de <?php echo htmlspecialchars($row_EntidadesLogo2['sec_nome']); ?>"
+							class="max-h-20 w-auto rounded-full partner-logo">
+						<p class="mt-2 text-sm text-center text-orange-500 font-medium">
+							<?php echo htmlspecialchars($row_EntidadesLogo2['sec_nome']); ?>
+						</p>
+					</div>
+					<?php
+					$delay += 0.5; // Incrementa o delay para a próxima animação
+				} while ($row_EntidadesLogo2 = mysql_fetch_assoc($EntidadesLogo2));
+				?>
+			</div>
+		</div>
+	</section>
+
+	<!-- Contact Section -->
+	<!-- <section id="contact" class="py-16 sm:py-24 bg-gradient-to-br from-blue-100 to-white">
+		<div class="container mx-auto px-4 sm:px-6">
+			<div class="max-w-5xl mx-auto">
+				<div class="grid md:grid-cols-2 gap-12 items-center">
+					<div class="space-y-8 animated-element">
+						<div class="space-y-4">
+							<h2 class="text-3xl sm:text-4xl font-display font-bold text-gray-900">Vamos Conversar</h2>
+							<p class="text-lg text-gray-600">
+								Quer saber como o SMECEL pode ajudar sua secretaria de educação? Entre em contato
+								conosco.
+							</p>
+						</div>
+
+						<div class="space-y-4">
+							<div class="flex items-start">
+								<div class="bg-primary/10 rounded-full p-3 mr-4">
+									<i class="fas fa-map-marker-alt text-primary"></i>
+								</div>
+								<div>
+									<h3 class="font-bold text-gray-800">Endereço</h3>
+									<p class="text-gray-600">Av. Exemplo, 1234 - Centro, Cidade - UF</p>
+								</div>
+							</div>
+
+							<div class="flex items-start">
+								<div class="bg-primary/10 rounded-full p-3 mr-4">
+									<i class="fas fa-phone text-primary"></i>
+								</div>
+								<div>
+									<h3 class="font-bold text-gray-800">Telefone</h3>
+									<p class="text-gray-600">(00) 1234-5678</p>
+								</div>
+							</div>
+
+							<div class="flex items-start">
+								<div class="bg-primary/10 rounded-full p-3 mr-4">
+									<i class="fas fa-envelope text-primary"></i>
+								</div>
+								<div>
+									<h3 class="font-bold text-gray-800">E-mail</h3>
+									<p class="text-gray-600">contato@smecel.com.br</p>
+								</div>
+							</div>
+						</div>
+
+						<div class="flex space-x-4">
+							<a href="#"
+								class="bg-primary/10 hover:bg-primary/20 text-primary p-3 rounded-full transition-colors">
+								<i class="fab fa-facebook-f"></i>
+							</a>
+							<a href="#"
+								class="bg-primary/10 hover:bg-primary/20 text-primary p-3 rounded-full transition-colors">
+								<i class="fab fa-instagram"></i>
+							</a>
+							<a href="#"
+								class="bg-primary/10 hover:bg-primary/20 text-primary p-3 rounded-full transition-colors">
+								<i class="fab fa-linkedin-in"></i>
+							</a>
+							<a href="#"
+								class="bg-primary/10 hover:bg-primary/20 text-primary p-3 rounded-full transition-colors">
+								<i class="fab fa-youtube"></i>
+							</a>
+						</div>
+					</div>
+
+					<div class="bg-white p-8 rounded-xl shadow-lg animated-element">
+						<h3 class="text-2xl font-bold mb-6">Envie uma mensagem</h3>
+						<form class="space-y-6">
+							<div>
+								<label for="name" class="block text-sm font-medium text-gray-700 mb-1">Nome
+									completo</label>
+								<input type="text" id="name"
+									class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+							</div>
+							<div>
+								<label for="email" class="block text-sm font-medium text-gray-700 mb-1">E-mail</label>
+								<input type="email" id="email"
+									class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+							</div>
+							<div>
+								<label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+								<input type="tel" id="phone"
+									class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary">
+							</div>
+							<div>
+								<label for="message"
+									class="block text-sm font-medium text-gray-700 mb-1">Mensagem</label>
+								<textarea id="message" rows="4"
+									class="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary"></textarea>
+							</div>
+							<button type="submit"
+								class="w-full bg-primary text-white py-3 px-6 rounded-md hover:bg-primary/90 transition-colors font-medium">
+								Enviar mensagem
+							</button>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section> -->
+
+	<!-- Footer -->
+	<footer class="bg-gray-900 text-white pt-16 pb-8">
+		<div class="container mx-auto px-4 sm:px-6">
+			<div class="grid md:grid-cols-4 gap-10 mb-12">
+				<div class="space-y-4">
+					<img src="https://smecel.com.br/img/logo_smecel_background_flattened.png" alt="Logotipo SMECEL"
+						class="h-8 w-auto">
+					<p class="text-gray-400">
+						Sistema completo de gestão escolar para secretarias de educação e escolas.
+					</p>
+					<p class="text-gray-400">
+						CNPJ: 10.593.149/0001-85
+					</p>
+				</div>
+
+				<div>
+					<h3 class="text-xl font-bold mb-4">Links Rápidos</h3>
+					<ul class="space-y-2">
+						<li><a href="#about" class="text-gray-400 hover:text-white transition-colors">Sobre</a></li>
+						<li><a href="#features" class="text-gray-400 hover:text-white transition-colors">Recursos</a>
+						</li>
+						<li><a href="#statistics"
+								class="text-gray-400 hover:text-white transition-colors">Estatísticas</a></li>
+						<li><a href="#modules" class="text-gray-400 hover:text-white transition-colors">Módulos</a></li>
+						<li><a href="#partners" class="text-gray-400 hover:text-white transition-colors">Parceiros</a>
+						</li>
+					</ul>
+				</div>
+
+				<div>
+					<h3 class="text-xl font-bold mb-4">Módulos</h3>
+					<ul class="space-y-2">
+						<li><a href="#" class="text-gray-400 hover:text-white transition-colors">Secretaria</a></li>
+						<li><a href="#" class="text-gray-400 hover:text-white transition-colors">Escola</a></li>
+						<li><a href="#" class="text-gray-400 hover:text-white transition-colors">Professor</a></li>
+						<li><a href="#" class="text-gray-400 hover:text-white transition-colors">Aluno</a></li>
+						<li><a href="#" class="text-gray-400 hover:text-white transition-colors">PSE</a></li>
+						<li><a href="#" class="text-gray-400 hover:text-white transition-colors">Conselho Tutelar</a>
+						</li>
+					</ul>
+				</div>
+
+				<div>
+					<h3 class="text-xl font-bold mb-4">Contato</h3>
+					<ul class="space-y-2">
+						<li class="flex items-center">
+							<i class="fas fa-map-marker-alt mr-2 text-primary"></i>
+							<span class="text-gray-400">Itagimirim - BA</span>
+						</li>
+						<li class="flex items-center">
+							<i class="fas fa-phone mr-2 text-primary"></i>
+							<span class="text-gray-400">(73) 8148-9157</span>
+						</li>
+						<li class="flex items-center">
+							<i class="fas fa-envelope mr-2 text-primary"></i>
+							<span class="text-gray-400">comercial@smecel.com.br</span>
+						</li>
+					</ul>
+					<!-- <div class="flex space-x-4 mt-4">
+						<a href="#" class="text-gray-400 hover:text-white transition-colors">
+							<i class="fab fa-facebook-f"></i>
+						</a>
+						<a href="#" class="text-gray-400 hover:text-white transition-colors">
+							<i class="fab fa-instagram"></i>
+						</a>
+						<a href="#" class="text-gray-400 hover:text-white transition-colors">
+							<i class="fab fa-linkedin-in"></i>
+						</a>
+						<a href="#" class="text-gray-400 hover:text-white transition-colors">
+							<i class="fab fa-youtube"></i>
+						</a>
+					</div> -->
+				</div>
+			</div>
+
+			<div class="border-t border-gray-800 pt-8">
+				<div class="flex flex-col md:flex-row justify-between items-center">
+					<p class="text-gray-400">© <?= date('Y') ?> SMECEL. Todos os direitos reservados.</p>
+					<!-- <div class="flex space-x-6 mt-4 md:mt-0">
+						<a href="#" class="text-gray-400 hover:text-white transition-colors">Política de Privacidade</a>
+						<a href="#" class="text-gray-400 hover:text-white transition-colors">Termos de Uso</a>
+					</div> -->
+				</div>
+			</div>
+		</div>
+	</footer>
+
+	<!-- Back to Top Button -->
+	<button id="back-to-top"
+		class="fixed bottom-6 right-6 p-3 rounded-full bg-primary text-white shadow-lg transition-all duration-300 opacity-0 invisible">
+		<i class="fas fa-chevron-up"></i>
+	</button>
+
+	<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+		integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+	<!-- JavaScript -->
+
+	<script>
+		// Inicializar o mapa
+		var map = L.map('map').setView([-12.5, -41.5], 6); // Centro aproximado da Bahia
+
+		// Adicionar o tile layer do OpenStreetMap
+		L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+			attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+		}).addTo(map);
+
+		// Lista de cidades com coordenadas
+		var cities = [
+			{ name: "Belmonte", coords: [-15.8613, -38.8798] },
+			{ name: "Brejolandia", coords: [-12.4833, -43.9667] },
+			{ name: "Canavieiras", coords: [-15.6750, -38.9472] },
+			{ name: "Carinhanha", coords: [-14.3049, -43.7724] },
+			{ name: "Cocos", coords: [-14.1814, -44.5352] },
+			{ name: "Feira da Mata", coords: [-14.2000, -44.2667] },
+			{ name: "Guaratinga", coords: [-16.5667, -39.5667] },
+			{ name: "Itabela", coords: [-16.5731, -39.5362] },
+			{ name: "Itagimirim", coords: [-16.0833, -39.6167] },
+			{ name: "Itapebi", coords: [-15.9552, -39.5329] },
+			{ name: "Itororó", coords: [-14.9667, -40.0667] },
+			{ name: "Mascote", coords: [-15.5631, -39.3025] },
+			{ name: "Medeiros Neto", coords: [-17.3739, -40.2206] },
+			{ name: "Serra Dourada", coords: [-12.7667, -43.9500] },
+			{ name: "Tabocas do Brejo Velho", coords: [-12.7000, -44.0000] }
+		];
+
+		// Adicionar marcadores para cada cidade
+		cities.forEach(function (city) {
+			L.marker(city.coords)
+				.addTo(map)
+				.bindPopup(`<b>${city.name}</b><br>SMECEL está presente aqui!`);
+		});
+	</script>
+
+	<script>
+		// Mobile Menu Toggle
+		const mobileMenuButton = document.getElementById('mobile-menu-button');
+		const mobileMenu = document.getElementById('mobile-menu');
+
+		mobileMenuButton.addEventListener('click', () => {
+			mobileMenu.classList.toggle('hidden');
+		});
+
+		// Header Scroll Effect
+		const header = document.getElementById('header');
+		let lastScrollY = window.scrollY;
+
+		window.addEventListener('scroll', () => {
+			if (window.scrollY > 100) {
+				header.classList.add('py-2', 'shadow-md');
+				header.classList.remove('py-3');
+			} else {
+				header.classList.add('py-3');
+				header.classList.remove('py-2', 'shadow-md');
+			}
+
+			lastScrollY = window.scrollY;
+		});
+
+		// Back to Top Button
+		const backToTopButton = document.getElementById('back-to-top');
+
+		window.addEventListener('scroll', () => {
+			if (window.scrollY > 500) {
+				backToTopButton.classList.remove('opacity-0', 'invisible');
+				backToTopButton.classList.add('opacity-100', 'visible');
+			} else {
+				backToTopButton.classList.add('opacity-0', 'invisible');
+				backToTopButton.classList.remove('opacity-100', 'visible');
+			}
+		});
+
+		backToTopButton.addEventListener('click', () => {
+			window.scrollTo({
+				top: 0,
+				behavior: 'smooth'
+			});
+		});
+
+		// Module Tabs
+		const moduleTabs = document.querySelectorAll('.module-tab');
+		const moduleContents = document.querySelectorAll('.module-content');
+
+		moduleTabs.forEach(tab => {
+			tab.addEventListener('click', () => {
+				// Remove active class from all tabs
+				moduleTabs.forEach(t => {
+					t.classList.remove('active', 'bg-primary', 'text-white');
+					t.classList.add('bg-gray-200', 'text-gray-700');
+				});
+
+				// Add active class to clicked tab
+				tab.classList.add('active', 'bg-primary', 'text-white');
+				tab.classList.remove('bg-gray-200', 'text-gray-700');
+
+				// Hide all content
+				moduleContents.forEach(content => {
+					content.classList.add('hidden');
+					content.classList.remove('active');
+				});
+
+				// Show matching content
+				const tabId = tab.getAttribute('data-tab');
+				const contentId = `${tabId}-content`;
+				const content = document.getElementById(contentId);
+
+				content.classList.remove('hidden');
+				content.classList.add('active');
+			});
+		});
+
+		// Animated Counter
+		const statCounters = document.querySelectorAll('.stat-counter');
+
+		function animateCounter(counter, target, duration = 2000) {
+			let start = 0;
+			const step = target / 50; // Divide animation into steps
+			const timer = setInterval(() => {
+				start += step;
+				if (start > target) {
+					counter.textContent = target;
+					clearInterval(timer);
+				} else {
+					counter.textContent = Math.floor(start);
+				}
+			}, duration / 50);
+		}
+
+		// Intersection Observer for animation on scroll
+		const observer = new IntersectionObserver((entries) => {
+			entries.forEach(entry => {
+				if (entry.isIntersecting) {
+					entry.target.classList.add('visible');
+
+					// If it's a counter, animate it
+					if (entry.target.querySelector('.stat-counter')) {
+						const counters = entry.target.querySelectorAll('.stat-counter');
+						counters.forEach(counter => {
+							const target = parseInt(counter.getAttribute('data-target'));
+							animateCounter(counter, target);
+						});
+					}
+				}
+			});
+		}, {
+			threshold: 0.1
+		});
+
+		// Observe all animated elements
+		document.querySelectorAll('.animated-element').forEach(element => {
+			observer.observe(element);
+		});
+
+		// Also observe statistics section specifically for counter animation
+		const statisticsSection = document.querySelector('#statistics');
+		if (statisticsSection) {
+			observer.observe(statisticsSection);
+		}
+	</script>
+</body>
+
+</html>
+<?php mysql_free_result($EntidadesLogo); ?>

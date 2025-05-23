@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1.0"/>
+  <title>Starter Template - Materialize</title>
+
+  <!-- CSS  -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link href="css/materialize.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+  <link href="css/style.css" type="text/css" rel="stylesheet" media="screen,projection"/>
+</head>
+<body>
+  <nav class="light-blue lighten-1" role="navigation">
+    <div class="nav-wrapper container"><a id="logo-container" href="#" class="brand-logo">IA SMECEL</a>
+      <ul class="right hide-on-med-and-down">
+        <li><a href="#">Navbar Link</a></li>
+      </ul>
+
+      <ul id="nav-mobile" class="sidenav">
+        <li><a href="#">Navbar Link</a></li>
+      </ul>
+      <a href="#" data-target="nav-mobile" class="sidenav-trigger"><i class="material-icons">menu</i></a>
+    </div>
+  </nav>
+
+
+
+
+  <div class="section no-pad-bot" id="index-banner">
+    <div class="container">
+      <br><br>
+      <h1 class="header center orange-text">Parecer</h1>
+      <div class="row center">
+        <h5 class="header col s12 light">Digite abaixo as instruções para a IA</h5>
+      </div>
+
+      <div class="row center">
+
+        <form class="col s12 center" id="contactForm" method="POST">
+          <div class="row center">
+            <div class="input-field col s12">
+              <textarea id="message" name="message" required class="materialize-textarea"></textarea>
+              <label for="message">Instruções</label>
+            </div>
+          </div>
+        
+      </div>
+
+      <div class="row center">
+        <button type="submit" class="btn-large waves-effect waves-light orange">Enviar</button>
+      </div>
+      <br><br>
+      </form>
+
+
+    <div class="row">
+      <blockquote>
+      <div id="response"></div>
+    </blockquote>
+    </div>
+      
+
+    </div>
+
+
+  </div>
+
+
+
+
+  <!--  Scripts-->
+  <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script>
+  <script src="js/materialize.js"></script>
+  <script src="js/init.js"></script>
+
+  
+  <script>
+    $(document).ready(function() {
+        $('#contactForm').on('submit', function(e) {
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: 'process_form.php',
+                data: $(this).serialize(),
+                success: function(response) {
+                    $('#response').html(response);
+                }
+            });
+        });
+    });
+</script>
+
+  </body>
+</html>

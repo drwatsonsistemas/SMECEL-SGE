@@ -1,0 +1,72 @@
+<html>
+<head>
+	<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+	<script type="text/javascript">
+	
+	
+	jQuery(document).ready(function(){
+		jQuery('#ajax_form').submit(function(){
+			var dados = jQuery(this).serialize();
+			//alert("algo");
+
+			jQuery.ajax({
+				type: "POST",
+				url: "processa.php",
+				data: dados,
+				success: function( data )
+				{
+//Verifica se palavra/frase é igual a data dentro de Echo no Processa.php
+				if (data == "TESTE")
+				{
+//Se for, aparece o que tem no echo e redireciona a página
+				alert(data);
+				$('#status').html("Lançamento excluído com sucesso");
+				}
+				else
+//Senão
+				{
+//Mostra o que tiver em outro Echo
+				alert(data);
+				}
+						}
+						});
+
+			return false;
+		});
+	});
+	
+	
+/*	
+	jQuery(document).ready(function(){
+		jQuery('#ajax_form').submit(function(){
+			var dados = jQuery( this ).serialize();
+			alert("TESTE");
+
+			jQuery.ajax({
+				type: "POST",
+				url: "processa.php",
+				data: dados,
+				success: function( data )
+				{
+					alert( data );
+				}
+			});
+			
+			return false;
+		});
+	});
+*/	</script>
+<link rel="apple-touch-icon" sizes="180x180" href="https://www.smecel.com.br/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="https://www.smecel.com.br/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="https://www.smecel.com.br/favicon-16x16.png">
+<link rel="manifest" href="https://www.smecel.com.br/site.webmanifest">
+</head>
+<body>
+	<form method="post" action="" id="ajax_form">
+		<label>ID: <input type="text" name="id" value="" /></label>
+		<label>VALOR: <input type="text" name="valor" value="" /></label>
+
+		<label><input type="submit" name="enviar" value="Enviar" /></label>
+	</form>
+</body>
+</html>

@@ -1,0 +1,843 @@
+<?php require_once('../../Connections/SmecelNovo.php'); ?>
+<?php // include "fnc/anoLetivo.php"; ?>
+<?php include "fnc/session.php"; ?>
+<?php
+if (!function_exists('GetSQLValueString')) {
+  function GetSQLValueString($theValue, $theType, $theDefinedValue = '', $theNotDefinedValue = '')
+  {
+    if (PHP_VERSION < 6) {
+      $theValue = get_magic_quotes_gpc() ? stripslashes($theValue) : $theValue;
+    }
+
+    $theValue = function_exists('mysql_real_escape_string') ? mysql_real_escape_string($theValue) : mysql_escape_string($theValue);
+
+    switch ($theType) {
+      case 'text':
+        $theValue = ($theValue != '') ? "'" . $theValue . "'" : 'NULL';
+        break;
+      case 'long':
+      case 'int':
+        $theValue = ($theValue != '') ? intval($theValue) : 'NULL';
+        break;
+      case 'double':
+        $theValue = ($theValue != '') ? doubleval($theValue) : 'NULL';
+        break;
+      case 'date':
+        $theValue = ($theValue != '') ? "'" . $theValue . "'" : 'NULL';
+        break;
+      case 'defined':
+        $theValue = ($theValue != '') ? $theDefinedValue : $theNotDefinedValue;
+        break;
+    }
+    return $theValue;
+  }
+}
+
+include 'usuLogado.php';
+include 'fnc/anoLetivo.php';
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_EscolaLogada = "
+SELECT escola_id, escola_id_sec, escola_nome, escola_cep, escola_endereco, escola_num, escola_bairro, escola_telefone1, 
+escola_telefone2, escola_email, escola_inep, escola_cnpj, escola_logo, escola_tema,  sec_id, sec_cidade, sec_uf 
+FROM smc_escola
+INNER JOIN smc_sec ON sec_id = escola_id_sec 
+WHERE escola_id = '$row_UsuLogado[usu_escola]'";
+$EscolaLogada = mysql_query($query_EscolaLogada, $SmecelNovo) or die(mysql_error());
+$row_EscolaLogada = mysql_fetch_assoc($EscolaLogada);
+$totalRows_EscolaLogada = mysql_num_rows($EscolaLogada);
+if ($totalRows_EscolaLogada < 1) {
+  // echo "ESCOLA PARALIZADA";
+  header('Location: index.php?doLogout=true');
+  exit;
+}
+
+if (($row_EscolaLogada['escola_telefone1'] == "") || $row_EscolaLogada['escola_email'] == "") {
+  // echo "ESCOLA PARALIZADA";
+  header('Location: secretaria.php?contato=true');
+  exit;
+}
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_TurmasListar = "SELECT turma_id, turma_id_escola, turma_nome, turma_etapa, turma_turno, turma_total_alunos, turma_ano_letivo, etapa_id, etapa_nome FROM smc_turma INNER JOIN smc_etapa ON etapa_id = turma_etapa WHERE turma_id_escola = $row_EscolaLogada[escola_id] AND turma_ano_letivo = '$row_AnoLetivo[ano_letivo_ano]' ORDER BY turma_etapa ASC";
+$TurmasListar = mysql_query($query_TurmasListar, $SmecelNovo) or die(mysql_error());
+$row_TurmasListar = mysql_fetch_assoc($TurmasListar);
+$totalRows_TurmasListar = mysql_num_rows($TurmasListar);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Transporte = "SELECT vinculo_aluno_id, vinculo_aluno_id_aluno, vinculo_aluno_id_turma, vinculo_aluno_id_escola, vinculo_aluno_ano_letivo, vinculo_aluno_transporte, vinculo_aluno_data, vinculo_aluno_hash, vinculo_aluno_verificacao, vinculo_aluno_boletim, vinculo_aluno_situacao, vinculo_aluno_datatransferencia, vinculo_aluno_dependencia FROM smc_vinculo_aluno WHERE vinculo_aluno_transporte = 'S' AND vinculo_aluno_id_escola = '$row_EscolaLogada[escola_id]' AND vinculo_aluno_ano_letivo = '$row_AnoLetivo[ano_letivo_ano]' AND vinculo_aluno_situacao = '1'  AND vinculo_aluno_dependencia = 'N' GROUP BY vinculo_aluno_id_aluno";
+$Transporte = mysql_query($query_Transporte, $SmecelNovo) or die(mysql_error());
+$row_Transporte = mysql_fetch_assoc($Transporte);
+$totalRows_Transporte = mysql_num_rows($Transporte);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_AlunosSituacao = "
+SELECT vinculo_aluno_id, vinculo_aluno_id_aluno, vinculo_aluno_id_turma, vinculo_aluno_id_escola, 
+vinculo_aluno_ano_letivo, vinculo_aluno_transporte, vinculo_aluno_data, vinculo_aluno_hash, 
+vinculo_aluno_verificacao, vinculo_aluno_boletim, vinculo_aluno_situacao, vinculo_aluno_datatransferencia, vinculo_aluno_dependencia, COUNT(vinculo_aluno_id) AS total,
+turma_id, turma_nome, turma_tipo_atendimento, 
+CASE vinculo_aluno_situacao
+WHEN 1 THEN 'ATIVOS'
+WHEN 2 THEN 'TRANSFERIDOS'
+WHEN 3 THEN 'DESISTENTES'
+WHEN 4 THEN 'FALECIDOS'
+WHEN 5 THEN 'OUTROS'
+END AS vinculo_aluno_situacao,
+CASE vinculo_aluno_situacao
+WHEN 1 THEN ''
+WHEN 2 THEN 'green'
+WHEN 3 THEN 'red'
+WHEN 4 THEN 'silver'
+WHEN 5 THEN 'grey'
+END AS cor 
+FROM smc_vinculo_aluno 
+INNER JOIN smc_turma ON turma_id = vinculo_aluno_id_turma
+WHERE turma_tipo_atendimento = '1' AND vinculo_aluno_ano_letivo = '$row_AnoLetivo[ano_letivo_ano]' AND vinculo_aluno_id_escola = '$row_EscolaLogada[escola_id]' AND vinculo_aluno_dependencia = 'N'
+GROUP BY vinculo_aluno_situacao ASC";
+$AlunosSituacao = mysql_query($query_AlunosSituacao, $SmecelNovo) or die(mysql_error());
+$row_AlunosSituacao = mysql_fetch_assoc($AlunosSituacao);
+$totalRows_AlunosSituacao = mysql_num_rows($AlunosSituacao);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_AlunosTurno = "
+SELECT vinculo_aluno_id, vinculo_aluno_id_aluno, vinculo_aluno_id_turma, vinculo_aluno_id_escola, 
+vinculo_aluno_ano_letivo, vinculo_aluno_transporte, vinculo_aluno_data, 
+vinculo_aluno_hash, vinculo_aluno_verificacao, vinculo_aluno_boletim, 
+vinculo_aluno_situacao, vinculo_aluno_datatransferencia, vinculo_aluno_dependencia,
+turma_id, turma_nome, turma_tipo_atendimento, turma_turno, COUNT(turma_turno) AS total,
+CASE turma_turno
+WHEN 0 THEN 'INTEGRAL'
+WHEN 1 THEN 'MANHÃ'
+WHEN 2 THEN 'TARDE'
+WHEN 3 THEN 'NOITE'
+END AS turma_turno 
+FROM smc_vinculo_aluno
+INNER JOIN smc_turma ON turma_id = vinculo_aluno_id_turma 
+WHERE turma_tipo_atendimento = '1' AND vinculo_aluno_ano_letivo = $row_AnoLetivo[ano_letivo_ano] AND vinculo_aluno_id_escola = $row_EscolaLogada[escola_id] AND vinculo_aluno_situacao = '1' AND vinculo_aluno_dependencia = 'N'
+GROUP BY turma_turno ASC
+";
+$AlunosTurno = mysql_query($query_AlunosTurno, $SmecelNovo) or die(mysql_error());
+$row_AlunosTurno = mysql_fetch_assoc($AlunosTurno);
+$totalRows_AlunosTurno = mysql_num_rows($AlunosTurno);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_ListarAlunosVincular = "
+SELECT vinculo_aluno_id, vinculo_aluno_id_aluno, vinculo_aluno_id_turma, vinculo_aluno_id_escola, vinculo_aluno_ano_letivo, 
+vinculo_aluno_transporte, vinculo_aluno_data, vinculo_aluno_hash, vinculo_aluno_verificacao, vinculo_aluno_situacao, vinculo_aluno_dependencia, turma_id, turma_tipo_atendimento 
+FROM smc_vinculo_aluno
+INNER JOIN smc_turma ON turma_id = vinculo_aluno_id_turma 
+WHERE turma_tipo_atendimento = '1' AND vinculo_aluno_id_escola = $row_EscolaLogada[escola_id] AND vinculo_aluno_situacao = '1' AND vinculo_aluno_ano_letivo = $row_AnoLetivo[ano_letivo_ano] AND vinculo_aluno_dependencia = 'N'";
+$ListarAlunosVincular = mysql_query($query_ListarAlunosVincular, $SmecelNovo) or die(mysql_error());
+$row_ListarAlunosVincular = mysql_fetch_assoc($ListarAlunosVincular);
+$totalRows_ListarAlunosVincular = mysql_num_rows($ListarAlunosVincular);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_ListarAlunosVincularEspeciais = "
+SELECT vinculo_aluno_id, vinculo_aluno_id_aluno, vinculo_aluno_id_turma, vinculo_aluno_id_escola, vinculo_aluno_ano_letivo, 
+vinculo_aluno_transporte, vinculo_aluno_data, vinculo_aluno_hash, vinculo_aluno_verificacao, vinculo_aluno_situacao, vinculo_aluno_dependencia, turma_id, turma_tipo_atendimento,
+aluno_id, aluno_aluno_com_deficiencia 
+FROM smc_vinculo_aluno
+INNER JOIN smc_turma ON turma_id = vinculo_aluno_id_turma 
+INNER JOIN smc_aluno ON aluno_id = vinculo_aluno_id_aluno
+WHERE turma_tipo_atendimento = '1' AND vinculo_aluno_id_escola = $row_EscolaLogada[escola_id] AND vinculo_aluno_situacao = '1' AND vinculo_aluno_ano_letivo = $row_AnoLetivo[ano_letivo_ano] AND vinculo_aluno_dependencia = 'N' AND aluno_aluno_com_deficiencia = '1'";
+$ListarAlunosVincularEspeciais = mysql_query($query_ListarAlunosVincularEspeciais, $SmecelNovo) or die(mysql_error());
+$row_ListarAlunosVincularEspeciais = mysql_fetch_assoc($ListarAlunosVincularEspeciais);
+$totalRows_ListarAlunosVincularEspeciais = mysql_num_rows($ListarAlunosVincularEspeciais);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_ListarAlunosVincularEspeciaisLaudo = "
+SELECT vinculo_aluno_id, vinculo_aluno_id_aluno, vinculo_aluno_id_turma, vinculo_aluno_id_escola, vinculo_aluno_ano_letivo, 
+vinculo_aluno_transporte, vinculo_aluno_data, vinculo_aluno_hash, vinculo_aluno_verificacao, vinculo_aluno_situacao, vinculo_aluno_dependencia, turma_id, turma_tipo_atendimento,
+aluno_id, aluno_aluno_com_deficiencia, aluno_laudo 
+FROM smc_vinculo_aluno
+INNER JOIN smc_turma ON turma_id = vinculo_aluno_id_turma 
+INNER JOIN smc_aluno ON aluno_id = vinculo_aluno_id_aluno
+WHERE turma_tipo_atendimento = '1' AND vinculo_aluno_id_escola = $row_EscolaLogada[escola_id] AND vinculo_aluno_situacao = '1' AND vinculo_aluno_ano_letivo = $row_AnoLetivo[ano_letivo_ano] AND vinculo_aluno_dependencia = 'N' AND aluno_aluno_com_deficiencia = '1' AND aluno_laudo = '1'";
+$ListarAlunosVincularEspeciaisLaudo = mysql_query($query_ListarAlunosVincularEspeciaisLaudo, $SmecelNovo) or die(mysql_error());
+$row_ListarAlunosVincularEspeciaisLaudo = mysql_fetch_assoc($ListarAlunosVincularEspeciaisLaudo);
+$totalRows_ListarAlunosVincularEspeciaisLaudo = mysql_num_rows($ListarAlunosVincularEspeciaisLaudo);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_ListarAlunosVincularZonaRural = "
+SELECT vinculo_aluno_id, vinculo_aluno_id_aluno, vinculo_aluno_id_turma, vinculo_aluno_id_escola, vinculo_aluno_ano_letivo, 
+vinculo_aluno_transporte, vinculo_aluno_data, vinculo_aluno_hash, vinculo_aluno_verificacao, vinculo_aluno_situacao, vinculo_aluno_dependencia, turma_id, turma_tipo_atendimento,
+aluno_id, aluno_localizacao 
+FROM smc_vinculo_aluno
+INNER JOIN smc_turma ON turma_id = vinculo_aluno_id_turma 
+INNER JOIN smc_aluno ON aluno_id = vinculo_aluno_id_aluno
+WHERE turma_tipo_atendimento = '1' AND vinculo_aluno_id_escola = $row_EscolaLogada[escola_id] AND vinculo_aluno_situacao = '1' AND vinculo_aluno_ano_letivo = $row_AnoLetivo[ano_letivo_ano] AND vinculo_aluno_dependencia = 'N' AND aluno_localizacao = '2'";
+$ListarAlunosVincularZonaRural = mysql_query($query_ListarAlunosVincularZonaRural, $SmecelNovo) or die(mysql_error());
+$row_ListarAlunosVincularZonaRural = mysql_fetch_assoc($ListarAlunosVincularZonaRural);
+$totalRows_ListarAlunosVincularZonaRural = mysql_num_rows($ListarAlunosVincularZonaRural);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_ListaVinculos = "
+SELECT vinculo_id, vinculo_id_escola, vinculo_id_funcionario, vinculo_id_funcao, DATE_FORMAT(vinculo_data_inicio, '%d/%m/%Y') AS vinculo_data_inicio, vinculo_obs, func_id, func_nome, funcao_id, funcao_nome 
+FROM smc_vinculo 
+INNER JOIN smc_func 
+ON func_id = vinculo_id_funcionario 
+INNER JOIN smc_funcao
+ON funcao_id = vinculo_id_funcao 
+WHERE vinculo_id_escola = '$row_EscolaLogada[escola_id]'
+AND vinculo_status = '1'
+";
+$ListaVinculos = mysql_query($query_ListaVinculos, $SmecelNovo) or die(mysql_error());
+$row_ListaVinculos = mysql_fetch_assoc($ListaVinculos);
+$totalRows_ListaVinculos = mysql_num_rows($ListaVinculos);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_AlunosZonaRural = "
+SELECT vinculo_aluno_id, vinculo_aluno_id_aluno, vinculo_aluno_id_turma, vinculo_aluno_id_escola, 
+vinculo_aluno_ano_letivo, vinculo_aluno_transporte, vinculo_aluno_data, vinculo_aluno_hash, 
+vinculo_aluno_verificacao, vinculo_aluno_boletim, vinculo_aluno_situacao, vinculo_aluno_datatransferencia,
+aluno_id, aluno_nome, aluno_localizacao, COUNT(aluno_localizacao) AS total_localizacao, vinculo_aluno_dependencia,
+turma_id, turma_nome, turma_tipo_atendimento, 
+CASE aluno_localizacao
+WHEN 1 THEN 'ZONA URBANA'
+WHEN 2 THEN 'ZONA RURAL'
+END AS aluno_localizacao_nome  
+FROM smc_vinculo_aluno
+INNER JOIN smc_aluno ON aluno_id = vinculo_aluno_id_aluno
+INNER JOIN smc_turma ON turma_id = vinculo_aluno_id_turma
+WHERE turma_tipo_atendimento = '1' AND vinculo_aluno_id_escola = '$row_UsuLogado[usu_escola]' AND vinculo_aluno_ano_letivo = '$row_AnoLetivo[ano_letivo_ano]' AND vinculo_aluno_situacao = '1' AND vinculo_aluno_dependencia = 'N'
+GROUP BY aluno_localizacao
+";
+$AlunosZonaRural = mysql_query($query_AlunosZonaRural, $SmecelNovo) or die(mysql_error());
+$row_AlunosZonaRural = mysql_fetch_assoc($AlunosZonaRural);
+$totalRows_AlunosZonaRural = mysql_num_rows($AlunosZonaRural);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_AlunosSexo = "
+SELECT vinculo_aluno_id, vinculo_aluno_id_aluno, vinculo_aluno_id_turma, vinculo_aluno_id_escola, 
+vinculo_aluno_ano_letivo, vinculo_aluno_transporte, vinculo_aluno_data, vinculo_aluno_hash, 
+vinculo_aluno_verificacao, vinculo_aluno_boletim, vinculo_aluno_situacao, vinculo_aluno_datatransferencia,
+aluno_id, aluno_nome, aluno_sexo, COUNT(aluno_sexo) AS total_sexo, vinculo_aluno_dependencia,
+turma_id, turma_nome, turma_tipo_atendimento,
+CASE aluno_sexo
+WHEN 1 THEN 'MASCULINO'
+WHEN 2 THEN 'FEMININO'
+END AS aluno_sexo_descricao  
+FROM smc_vinculo_aluno
+INNER JOIN smc_aluno ON aluno_id = vinculo_aluno_id_aluno
+INNER JOIN smc_turma ON turma_id = vinculo_aluno_id_turma
+WHERE turma_tipo_atendimento = '1' AND vinculo_aluno_id_escola = '$row_UsuLogado[usu_escola]' AND vinculo_aluno_ano_letivo = '$row_AnoLetivo[ano_letivo_ano]' AND vinculo_aluno_situacao = '1' AND vinculo_aluno_dependencia = 'N'
+GROUP BY aluno_sexo
+";
+$AlunosSexo = mysql_query($query_AlunosSexo, $SmecelNovo) or die(mysql_error());
+$row_AlunosSexo = mysql_fetch_assoc($AlunosSexo);
+$totalRows_AlunosSexo = mysql_num_rows($AlunosSexo);
+
+if (!isset($_COOKIE['aviso1'])) {
+  // MARCAR COM "S" PARA EXIBIR ALERTA POPUP
+  // $exibeaviso = "S";
+  $exibeaviso = 'N';
+  setcookie('aviso1', 'S', time() + (3600 * 2));
+} else {
+  $exibeaviso = 'N';
+}
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Atualizacoes = "SELECT atualizacoes_id, atualizacoes_painel, atualizacoes_modulo, atualizacoes_texto, atualizacoes_data FROM smc_atualizacoes WHERE (atualizacoes_painel <> '99' AND atualizacoes_painel <> '1') ORDER BY atualizacoes_id DESC LIMIT 0,1";
+$Atualizacoes = mysql_query($query_Atualizacoes, $SmecelNovo) or die(mysql_error());
+$row_Atualizacoes = mysql_fetch_assoc($Atualizacoes);
+$totalRows_Atualizacoes = mysql_num_rows($Atualizacoes);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_AtualizacoesVisualizadas = "SELECT atualizacao_ver_id, atualizacao_ver_cod_atualizacao, atualizacao_ver_cod_usuario, atualizacao_ver_sec, atualizacao_ver_escola, atualizacao_ver_professor, atualizacao_ver_aluno, atualizacao_ver_data FROM smc_atualizacao_ver WHERE atualizacao_ver_cod_atualizacao = '$row_Atualizacoes[atualizacoes_id]' AND atualizacao_ver_sec = '$row_UsuLogado[usu_sec]' AND atualizacao_ver_cod_usuario = '$row_UsuLogado[usu_id]'";
+$AtualizacoesVisualizadas = mysql_query($query_AtualizacoesVisualizadas, $SmecelNovo) or die(mysql_error());
+$row_AtualizacoesVisualizadas = mysql_fetch_assoc($AtualizacoesVisualizadas);
+$totalRows_AtualizacoesVisualizadas = mysql_num_rows($AtualizacoesVisualizadas);
+
+?>
+
+<!DOCTYPE html>
+<html class="<?php echo $row_EscolaLogada['escola_tema']; ?>" lang="pt-br">
+
+<head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-117872281-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'UA-117872281-1');
+  </script>
+  <title>SMECEL - Sistema de Gestão Escolar</title>
+  <meta charset="utf-8">
+  <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" type="text/css" href="css/locastyle.css">
+  <link rel="stylesheet" type="text/css" href="css/preloader.css">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css">
+  <style>
+    .float {
+      position: fixed;
+      width: 60px;
+      height: 60px;
+      bottom: 40px;
+      right: 40px;
+      background-color: #25d366;
+      color: #FFF;
+      border-radius: 50px;
+      text-align: center;
+      font-size: 30px;
+      box-shadow: 2px 2px 3px #999;
+      z-index: 100;
+    }
+
+    .my-float {
+      margin-top: 16px;
+    }
+  </style>
+  <!--Load the AJAX API-->
+  <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+  <script type="text/javascript">
+
+    google.charts.load('current', { 'packages': ['corechart'] });
+    google.charts.setOnLoadCallback(drawChart);
+    function drawChart() {
+      // Create the data table.
+      var data = google.visualization.arrayToDataTable([
+        ['TURNO', 'TOTAL'],
+        <?php do { ?>
+          ['<?php echo $row_AlunosTurno['turma_turno']; ?> (<?php echo $row_AlunosTurno['total']; ?>)', <?php echo $row_AlunosTurno['total']; ?>],
+        <?php } while ($row_AlunosTurno = mysql_fetch_assoc($AlunosTurno)); ?>
+      ]);
+      var options = {
+        title: ''
+      };
+      var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+      chart.draw(data, options);
+    }
+
+  </script>
+
+
+
+  <script type="text/javascript">
+
+    google.charts.load('current', { 'packages': ['corechart'] });
+    google.charts.setOnLoadCallback(drawChart);
+    function drawChart() {
+      // Create the data table.
+      var data = google.visualization.arrayToDataTable([
+        ['SITUAÇÃO', 'TOTAL'],
+
+        <?php do { ?>
+          ["<?php echo $row_AlunosSituacao['vinculo_aluno_situacao']; ?> (<?php echo $row_AlunosSituacao['total']; ?>)", <?php echo $row_AlunosSituacao['total']; ?>],
+        <?php } while ($row_AlunosSituacao = mysql_fetch_assoc($AlunosSituacao)); ?>
+
+      ]);
+      var options = {
+        title: ''
+      };
+      var chart = new google.visualization.PieChart(document.getElementById('columnchart_values'));
+      chart.draw(data, options);
+    }
+
+  </script>
+
+
+
+
+  <script type="text/javascript">
+    google.charts.load('current', { 'packages': ['corechart'] });
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+
+      var data = google.visualization.arrayToDataTable([
+        ['ZONA', 'TOTAL'],
+
+        <?php do { ?>
+          ['<?php echo $row_AlunosZonaRural['aluno_localizacao_nome']; ?> (<?php echo $row_AlunosZonaRural['total_localizacao']; ?>)', <?php echo $row_AlunosZonaRural['total_localizacao']; ?>],
+        <?php } while ($row_AlunosZonaRural = mysql_fetch_assoc($AlunosZonaRural)); ?>
+
+      ]);
+
+      var options = {
+        title: ''
+      };
+
+      var chart = new google.visualization.PieChart(document.getElementById('piechart_zona_rural'));
+
+      chart.draw(data, options);
+    }
+  </script>
+  <script type="text/javascript">
+    google.charts.load('current', { 'packages': ['corechart'] });
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+
+      var data = google.visualization.arrayToDataTable([
+        ['GÊNERO', 'TOTAL'],
+
+        <?php do { ?>
+          ['<?php echo $row_AlunosSexo['aluno_sexo_descricao']; ?> (<?php echo $row_AlunosSexo['total_sexo']; ?>)', <?php echo $row_AlunosSexo['total_sexo']; ?>],
+        <?php } while ($row_AlunosSexo = mysql_fetch_assoc($AlunosSexo)); ?>
+
+      ]);
+
+      var options = {
+        title: ''
+      };
+
+      var chart = new google.visualization.PieChart(document.getElementById('piechart_sexo'));
+
+      chart.draw(data, options);
+    }
+  </script>
+  <script type="text/javascript">
+    google.charts.load('current', { 'packages': ['corechart'] });
+    google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+      var data = google.visualization.arrayToDataTable([
+
+        ['Data', 'Matrículas'],
+
+        <?php
+        $date_fim = date('Y-m-d');  // Data final
+        $date_ini = date('Y-m-d', strtotime('-10 days', strtotime($date_fim)));
+        ;  // Data inicial
+        $contaMatriculas = 0;
+
+        while (strtotime($date_ini) <= strtotime($date_fim)) {
+          mysql_select_db($database_SmecelNovo, $SmecelNovo);
+          $query_Matriculas = "
+\t\t\t\t\tSELECT vinculo_aluno_id, vinculo_aluno_id_aluno, vinculo_aluno_id_turma, vinculo_aluno_id_escola, 
+\t\t\t\t\tvinculo_aluno_id_sec, vinculo_aluno_ano_letivo, vinculo_aluno_transporte, vinculo_aluno_data, vinculo_aluno_hash, 
+\t\t\t\t\tvinculo_aluno_verificacao, vinculo_aluno_boletim, vinculo_aluno_situacao, vinculo_aluno_datatransferencia, 
+\t\t\t\t\tvinculo_aluno_da_casa, vinculo_aluno_historico_transferencia, vinculo_aluno_vacina_atualizada 
+\t\t\t\t\tFROM smc_vinculo_aluno
+\t\t\t\t\tWHERE vinculo_aluno_data = '$date_ini' AND vinculo_aluno_id_escola = '$row_UsuLogado[usu_escola]'";
+          $Matriculas = mysql_query($query_Matriculas, $SmecelNovo) or die(mysql_error());
+          $row_Matriculas = mysql_fetch_assoc($Matriculas);
+          $totalRows_Matriculas = mysql_num_rows($Matriculas);
+
+          ?>
+
+          ['<?php echo date('d/m', strtotime($date_ini)); ?>', <?php echo $totalRows_Matriculas; ?>],
+
+          <?php
+
+          $date_ini = date('Y-m-d', strtotime('+1 day', strtotime($date_ini)));
+          $contaMatriculas = $contaMatriculas + $totalRows_Matriculas;
+        }
+
+        ?>
+
+
+
+      ]);
+
+      var options = {
+        vAxis: { minValue: 0 },
+        legend: { position: 'bottom', maxLines: 3 },
+        animation: {
+          startup: true,
+          duration: 1000,
+          easing: 'linear'
+        }
+      };
+
+      var chart = new google.visualization.AreaChart(document.getElementById('chart_div_matriculas'));
+      chart.draw(data, options);
+    }
+  </script>
+  <link rel="apple-touch-icon" sizes="180x180" href="https://www.smecel.com.br/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://www.smecel.com.br/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://www.smecel.com.br/favicon-16x16.png">
+  <link rel="manifest" href="https://www.smecel.com.br/site.webmanifest">
+</head>
+
+<body>
+
+  <?php include_once('menu-top.php'); ?>
+
+  <?php include_once('menu-esc.php'); ?>
+
+
+  <main class="ls-main">
+    <a href="https://api.whatsapp.com/send?phone=557398685288" class="float" target="_blank">
+      <i class="fa fa-whatsapp my-float"></i>
+    </a>
+    <div class="container-fluid">
+
+
+
+
+      <h1 class="ls-title-intro ls-ico-home">Ano Letivo <?php echo $row_AnoLetivo['ano_letivo_ano']; ?></h1>
+
+
+      <?php if ($hoje >= $row_AnoLetivo['ano_letivo_data_rematricula']) { ?>
+
+      <div class="ls-alert-warning">
+        <strong>Atenção:</strong>
+        A consolidação deve ser realizada <strong>somente após o lançamento de todas as notas</strong> a <strong>conclusão do Conselho
+        Escolar</strong> e a verificação de casos de <strong>reprovação por faltas</strong>. É fundamental que todos esses processos estejam
+        completamente finalizados para garantir resultados precisos e alinhados à realidade.<br><br>
+        Para consolidar as turmas, acesse: <strong>FECHAMENTO > CONSOLIDAR RESULTADO FINAL</strong>.<br>
+        Para visualizar os gráficos, acesse: <strong>FECHAMENTO > RESULTADO FINAL</strong>.
+      </div>
+
+      <?php } ?>
+
+      <div class="ls-alert-warning">
+        <strong>Atenção:</strong>
+        Assista ao vídeo "Corrigir Nome de Turmas com Caracteres Quebrados" para aprender o passo a passo e corrigir os nomes das turmas de forma rápida e segura.
+        <a href="https://www.youtube.com/watch?v=avpjjI00iC4" target="_blank" rel="noopener noreferrer">Assistir vídeo</a>
+      </div>
+
+
+
+      <?php if (($row_UsuLogado['usu_senha'] == '123456') || ($row_UsuLogado['usu_senha'] == '12345')) { ?>
+        <div class="ls-alert-danger"><strong>Atenção!</strong><br>
+          Você está usando uma senha de acesso muito simples. Evite senhas como "123456", números de telefone, nomes de
+          pessoas ou outras combinações. <a href="dados.php">Clique aqui para alterar</a></div>
+      <?php } ?>
+
+      <?php if (isset($_GET['termoAceito'])) { ?>
+        <div class="ls-alert-success ls-dismissable">
+          <span data-ls-module="dismiss" class="ls-dismiss">&times;</span>
+          Você aceitou a Declaração de Conscientização sobre Utilização de Dados Pessoais para Fins Educacionais.
+          Lembre-se de proteger a privacidade dos nossos alunos.
+        </div>
+      <?php } ?>
+
+      <div class="ls-group-btn ls-group-active">
+        <a class="ls-btn ls-ico-chart-bar-up ls-ico-right" href="indicadores_aprovacao.php">Taxa de Aprovação</a>
+        <a class="ls-btn ls-ico-chart-bar-up ls-ico-right" href="indicadores_saeb.php">Indicadores SAEB</a>
+        <a class="ls-btn ls-ico-chart-bar-up ls-ico-right" href="indicadores_ideb.php">Indicadores IDEB</a>
+      </div>
+
+
+      <div class="ls-box-filter">
+
+        <form id="form_busca" autocomplete="off" action="redireciona.php" method="get"
+          class="ls-form ls-form-inline row">
+          <label class="ls-label col-md-12">
+            <b class="ls-label-text">LOCALIZAR ALUNO</b>
+            <input id="inputString" type="text" class="validate" value=""
+              placeholder="DIGITE O NOME DO ALUNO OU O NOME DA MÃE DO ALUNO" onkeyup="lookup(this.value);"
+              onblur="fill();" autofocus />
+          </label>
+          <input type="hidden" id="ano" value="<?php echo $row_AnoLetivo['ano_letivo_ano']; ?>" name="ano" />
+          <input type="hidden" id="campoBusca" value="" name="matricula" />
+          <div class="suggestionsBox" id="suggestions"
+            style="display: none; margin-top:0px; width:100%; margin-top:0px; position: relative; border:none;">
+            <div class="suggestionList" id="autoSuggestionsList"> </div>
+          </div>
+        </form>
+
+
+      </div>
+
+
+
+      <div class="ls-box ls-board-box">
+
+        <div id="sending-stats" class="row">
+
+          <div class="col-sm-6 col-md-3" style="background-color:#096;">
+            <div class="ls-box" style="background-color:#096;">
+              <div class="ls-box-head ls-background-primary1">
+                <h6 class="ls-title-4" style="color:#FFFFFF;">FUNCIONÁRIOS VINCULADOS</h6>
+              </div>
+              <div class="ls-box-body ls-background-primary1"> <strong style="color:#FFFFFF;"><span
+                    class="count"><?php echo $totalRows_ListaVinculos ?></span></strong> <small
+                  style="color:#FFFFFF;">funcionários vinculados</small> </div>
+              <div class="ls-box-footer ls-background-primary1"> <a href="funcListar.php" aria-label="Ver vínculos"
+                  class="ls-btn ls-btn-sm" title="Ver vínculos">Ver vínculos</a> </div>
+            </div>
+          </div>
+
+          <div class="col-sm-6 col-md-3" style="background-color:#903;">
+            <div class="ls-box" style="background-color:#903;">
+              <div class="ls-box-head ls-background-info1">
+                <h6 class="ls-title-4" style="color:#FFFFFF;">TURMAS DE ESCOLARIZAÇÃO</h6>
+              </div>
+              <div class="ls-box-body ls-background-info1"> <strong style="color:#FFFFFF;"><span
+                    class="count"><?php echo $totalRows_TurmasListar ?></span></strong> <small
+                  style="color:#FFFFFF;">turmas cadastradas</small> </div>
+              <div class="ls-box-footer ls-background-info1"> <a href="turmaListar.php" aria-label="Ver turmas"
+                  class="ls-btn ls-btn-sm" title="Ver turmas">Ver turmas</a> </div>
+            </div>
+          </div>
+
+          <div class="col-sm-6 col-md-3" style="background-color:#099;">
+            <div class="ls-box" style="background-color:#099;">
+              <div class="ls-box-head ls-background-success1">
+                <h6 class="ls-title-4" style="color:#FFFFFF;">MATRÍCULAS ATIVAS</h6>
+              </div>
+              <div class="ls-box-body ls-background-success1"> <strong style="color:#FFFFFF;"><span
+                    class="count"><?php echo $totalRows_ListarAlunosVincular ?></span></strong> <small
+                  style="color:#FFFFFF;">matrículas ativas</small> </div>
+              <div class="ls-box-footer ls-background-success1"> <a href="vinculoAlunoExibirTurma.php"
+                  aria-label="Ver alunos" class="ls-btn ls-btn-sm" title="Ver alunos">Ver alunos</a> </div>
+            </div>
+          </div>
+
+          <div class="col-sm-6 col-md-3" style="background-color:#C6C;">
+            <div class="ls-box" style="background-color:#C6C;">
+              <div class="ls-box-head ls-background-warning1">
+                <h6 class="ls-title-4" style="color:#FFFFFF;">PCD</h6>
+              </div>
+              <div class="ls-box-body ls-background-warning1"> <strong style="color:#FFFFFF;"><span
+                    class="count"><?php echo $totalRows_ListarAlunosVincularEspeciais; ?></span></strong>
+                <?php if ($totalRows_ListarAlunosVincularEspeciaisLaudo > 0) { ?><small
+                    style="color:#FFFFFF;"><?php echo number_format((($totalRows_ListarAlunosVincularEspeciais / $totalRows_ListarAlunosVincular) * 100), 2, '.', ''); ?>%</small><?php } ?>
+              </div>
+              <div class="ls-box-footer ls-background-warning1"> <small
+                  style="color:#FFFFFF;"><?php echo $totalRows_ListarAlunosVincularEspeciaisLaudo; ?> aluno(as) com
+                  laudo</small>
+                <!-- <a href="vinculoAlunoExibirTurma.php" aria-label="Ver alunos" class="ls-btn ls-btn-sm" title="Ver alunos">Ver alunos</a>-->
+              </div>
+            </div>
+          </div>
+
+          <div class="col-sm-6 col-md-3" style="background-color:#060;">
+            <div class="ls-box" style="background-color:#060;">
+              <div class="ls-box-head ls-background-warning1">
+                <h6 class="ls-title-4" style="color:#FFFFFF;">ALUNOS DA ZONA RURAL</h6>
+              </div>
+              <div class="ls-box-body ls-background-warning1"> <strong style="color:#FFFFFF;"><span
+                    class="count"><?php echo $totalRows_ListarAlunosVincularZonaRural; ?></span></strong>
+                <?php if ($totalRows_ListarAlunosVincularZonaRural > 0) { ?><small
+                    style="color:#FFFFFF;"><?php echo number_format((($totalRows_ListarAlunosVincularZonaRural / $totalRows_ListarAlunosVincular) * 100), 2, '.', ''); ?>%</small><?php } ?>
+              </div>
+              <div class="ls-box-footer ls-background-warning1">
+                <!-- <a href="vinculoAlunoExibirTurma.php" aria-label="Ver alunos" class="ls-btn ls-btn-sm" title="Ver alunos">Ver alunos</a> -->
+              </div>
+            </div>
+          </div>
+
+          <div class="col-sm-6 col-md-3" style="background-color:#C90;">
+            <div class="ls-box" style="background-color:#C90;">
+              <div class="ls-box-head ls-background-warning1">
+                <h6 class="ls-title-4" style="color:#FFFFFF;">TRANSPORTE ESCOLAR</h6>
+              </div>
+              <div class="ls-box-body ls-background-warning1"> <strong style="color:#FFFFFF;"><span
+                    class="count"><?php echo $totalRows_Transporte ?></span></strong>
+                <?php if ($totalRows_Transporte > 0) { ?><small
+                    style="color:#FFFFFF;"><?php echo number_format((($totalRows_Transporte / $totalRows_ListarAlunosVincular) * 100), 2, '.', ''); ?>%</small><?php } ?>
+              </div>
+              <div class="ls-box-footer ls-background-warning1">
+                <!-- <a href="vinculoAlunoExibirTurma.php" aria-label="Ver alunos" class="ls-btn ls-btn-sm" title="Ver alunos">Ver alunos</a> -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <?php if (($totalRows_AlunosSexo == 0) || ($totalRows_AlunosZonaRural == 0) || ($totalRows_AlunosSituacao == 0) || ($totalRows_AlunosTurno == 0)) { ?>
+      <?php } else { ?>
+        <div class="row">
+          <div class="col-md-12">
+            <div class="ls-box">
+              <h5 class="ls-title-3 ls-txt-center"><?php echo $contaMatriculas; ?> matrículas realizadas nos últimos 10
+                dias</h5>
+              <div id="chart_div_matriculas" style="width: 100%; height: 400px;"></div>
+            </div>
+          </div>
+        </div>
+        <p>&nbsp;</p>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="ls-box">
+              <h5 class="ls-title-3 ls-txt-center">Matrículas por turno</h5>
+              <div id="chart_div"></div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="ls-box">
+              <h5 class="ls-title-3 ls-txt-center">Matrículas por situação</h5>
+              <div id="columnchart_values"></div>
+            </div>
+          </div>
+        </div>
+        <p>&nbsp;</p>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="ls-box">
+              <h5 class="ls-title-3 ls-txt-center">Matrículas por zona de residência</h5>
+              <div id="piechart_zona_rural"></div>
+            </div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-md-6">
+            <div class="ls-box">
+              <h5 class="ls-title-3 ls-txt-center">Matrículas por gênero</h5>
+              <div id="piechart_sexo"></div>
+            </div>
+          </div>
+        </div>
+      <?php } ?>
+      <hr>
+      <p>&nbsp;</p>
+      <div class="ls-box1" style="display:none;">
+        <h5 class="ls-title-3">Calendário de eventos</h5>
+        <p>
+          <iframe src="../../agenda-views.php" style="border:none;" width="100%" height="800px;"></iframe>
+        </p>
+      </div>
+      <hr>
+    </div>
+  </main>
+
+
+  <?php include_once('menu-dir.php'); ?>
+
+
+
+  <span data-ls-module="modal" data-target="#censo"></span>
+  <div class="ls-modal" id="censo">
+    <div class="ls-modal-box">
+      <div class="ls-modal-header">
+        <button data-dismiss="modal">&times;</button>
+        <h4 class="ls-modal-title">CENSO ESCOLAR</h4>
+      </div>
+      <div class="ls-modal-body" id="myModalBody">
+        <p><strong>Prezado usuário,</strong></p>
+        <p>O período para coleta do Censo Escolar já começou.</p>
+        <p>Para facilitar o preenchimento das informações no sistema Educacenso, sugere-se que você realize o
+          preenchimento dos cadastros na seguinte ordem: Gestor, Escola, Turma, Aluno e Profissional Escolar. Depois de
+          preencher uma turma, preencha as informações de alunos e profissionais escolares dessa turma.
+        <p>No <a href="https://censobasico.inep.gov.br/censobasico/#/" target="_blank">site do Censo Escolar</a>, você
+          encontrará materiais que irão auxiliar na declaração das informações ao Censo.</p>
+      </div>
+      <div class="ls-modal-footer">
+        <button class="ls-btn-primary" data-dismiss="modal">FECHAR</button>
+      </div>
+    </div>
+  </div>
+  <!-- /.modal -->
+
+  <div class="ls-modal" id="atualizacao">
+    <div class="ls-modal-box">
+      <div class="ls-modal-header">
+        <button data-dismiss="modal">&times;</button>
+        <h4 class="ls-modal-title">Atualização no sistema em
+          <?php echo date("d/m/Y", strtotime($row_Atualizacoes['atualizacoes_data'])); ?> - Versão
+          1.<?php echo $row_Atualizacoes['atualizacoes_id']; ?>
+        </h4>
+      </div>
+      <div class="ls-modal-body" id="myModalBody">
+
+        <strong><?php echo $row_Atualizacoes['atualizacoes_modulo']; ?></strong><br><br>
+        <?php echo $row_Atualizacoes['atualizacoes_texto']; ?>
+
+      </div>
+      <div class="ls-modal-footer">
+        <button class="ls-btn ls-float-right" data-dismiss="modal">CONFIRMAR DEPOIS</button>
+        <a href="atualizacoes.php" class="ls-btn-primary">CONFIRMAR LEITURA</a>
+      </div>
+    </div>
+  </div><!-- /.modal -->
+
+  <!-- We recommended use jQuery 1.10 or up -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+  <script src="https://assets.locaweb.com.br/locastyle/3.8.4/javascripts/locastyle.js" type="text/javascript"></script>
+  <script src="js/maiuscula.js"></script>
+  <script src="js/semAcentos.js"></script>
+
+
+  <script type="text/javascript">
+    function lookup(inputString) {
+      ano = <?php echo $row_AnoLetivo['ano_letivo_ano']; ?>;
+      if (inputString.length == 0) {
+        $('#suggestions').hide();
+      } else {
+        $.post("busca_aluno.php", { queryString: "" + inputString + "", ano: ano }, function (data) {
+          if (data.length > 5) {
+            $('#suggestions').show();
+            $('#autoSuggestionsList').html(data);
+          }
+        });
+      }
+    }
+
+    function fill(thisValue) {
+      $('#inputString').val(thisValue);
+      setTimeout("$('#suggestions').hide();", 200);
+    }
+
+    function exibe(thisValue) {
+      $('#campoBusca').val(thisValue);
+      $('#inputString').val("Redirecionando...");
+      $("#form_busca").submit();
+    }
+  </script>
+  <script type="text/javascript">
+    $('html').bind('keypress', function (e) {
+      if (e.keyCode == 13) {
+        return false;
+      }
+    });
+  </script>
+
+  <script type="text/javascript">
+    <?php
+    if ($exibeaviso == 'S') {
+      ?>
+      locastyle.modal.open("#censo");
+
+    <?php } ?>
+  </script>
+
+  <script type="text/javascript">
+    <?php
+    if ($atualizacao == 'S') {
+      ?>
+      locastyle.modal.open("#atualizacao");
+
+    <?php } ?>
+  </script>
+
+
+
+  <script type="text/javascript">
+    $('.count').each(function () {
+      $(this).prop('Counter', 0).animate({
+        Counter: $(this).text()
+      }, {
+        duration: 3000,
+        easing: 'swing',
+        step: function (now) {
+          $(this).text(Math.ceil(now));
+        }
+      });
+    });
+  </script>
+
+</body>
+
+</html>
+<?php
+mysql_free_result($UsuLogado);
+
+mysql_free_result($EscolaLogada);
+
+mysql_free_result($TurmasListar);
+
+mysql_free_result($Transporte);
+
+mysql_free_result($Matriculas);
+
+mysql_free_result($AlunosSituacao);
+
+mysql_free_result($AlunosTurno);
+
+mysql_free_result($ListarAlunosVincular);
+
+mysql_free_result($ListarAlunosVincularEspeciais);
+?>

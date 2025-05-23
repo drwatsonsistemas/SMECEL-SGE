@@ -1,0 +1,521 @@
+/* ////////////////////////   Efnify helper Class stylesheet /////////////////////////////////// */
+
+
+/*------------------------------------------------------------------
+[Table of contents]
+
+1. Margin
+2. Padding
+3. Scrollbar
+-------------------------------------------------------------------*/
+
+
+/* =================================================================================
+Margin class
+================================================================================= */
+
+
+/*margin all side*/
+
+.m-a-0,
+.no-margin {
+    margin: 0px !important;
+}
+
+.m-a-5 {
+    margin: 5px !important;
+}
+
+.m-a-10 {
+    margin: 10px !important;
+}
+
+.m-a-15 {
+    margin: 15px !important;
+}
+
+.m-a-20 {
+    margin: 20px !important;
+}
+
+.m-a-25 {
+    margin: 25px !important;
+}
+
+.m-a-30 {
+    margin: 30px !important;
+}
+
+.m-a-35 {
+    margin: 35px !important;
+}
+
+.m-a-40 {
+    margin: 40px !important;
+}
+
+.m-a-45 {
+    margin: 45px !important;
+}
+
+.m-a-50 {
+    margin: 50px !important;
+}
+
+
+/*margin top*/
+
+.m-t-0 {
+    margin-top: 0px !important;
+}
+
+.m-t-5 {
+    margin-top: 5px !important;
+}
+
+.m-t-10 {
+    margin-top: 10px !important;
+}
+
+.m-t-15 {
+    margin-top: 15px !important;
+}
+
+.m-t-20 {
+    margin-top: 20px !important;
+}
+
+.m-t-25 {
+    margin-top: 25px !important;
+}
+
+.m-t-30 {
+    margin-top: 30px !important;
+}
+
+.m-t-35 {
+    margin-top: 35px !important;
+}
+
+.m-t-40 {
+    margin-top: 40px !important;
+}
+
+.m-t-45 {
+    margin-top: 45px !important;
+}
+
+.m-t-50 {
+    margin-top: 50px !important;
+}
+
+
+/*margin bottom*/
+
+.m-b-0 {
+    margin-bottom: 0px !important;
+}
+
+.m-b-5 {
+    margin-bottom: 5px !important;
+}
+
+.m-b-10 {
+    margin-bottom: 10px !important;
+}
+
+.m-b-15 {
+    margin-bottom: 15px !important;
+}
+
+.m-b-20 {
+    margin-bottom: 20px !important;
+}
+
+.m-b-25 {
+    margin-bottom: 25px !important;
+}
+
+.m-b-30 {
+    margin-bottom: 30px !important;
+}
+
+.m-b-35 {
+    margin-bottom: 35px !important;
+}
+
+.m-b-40 {
+    margin-bottom: 40px !important;
+}
+
+.m-b-45 {
+    margin-bottom: 45px !important;
+}
+
+.m-b-50 {
+    margin-bottom: 50px !important;
+}
+
+
+/*margin left*/
+
+.m-l-0 {
+    margin-left: 0px !important;
+}
+
+.m-l-5 {
+    margin-left: 5px !important;
+}
+
+.m-l-10 {
+    margin-left: 10px !important;
+}
+
+.m-l-15 {
+    margin-left: 15px !important;
+}
+
+.m-l-20 {
+    margin-left: 20px !important;
+}
+
+.m-l-25 {
+    margin-left: 25px !important;
+}
+
+.m-l-30 {
+    margin-left: 30px !important;
+}
+
+.m-l-35 {
+    margin-left: 35px !important;
+}
+
+.m-l-40 {
+    margin-left: 40px !important;
+}
+
+.m-l-45 {
+    margin-left: 45px !important;
+}
+
+.m-l-50 {
+    margin-left: 50px !important;
+}
+
+
+/*margin right*/
+
+.m-r-0 {
+    margin-right: 0px !important;
+}
+
+.m-r-5 {
+    margin-right: 5px !important;
+}
+
+.m-r-10 {
+    margin-right: 10px !important;
+}
+
+.m-r-15 {
+    margin-right: 15px !important;
+}
+
+.m-r-20 {
+    margin-right: 20px !important;
+}
+
+.m-r-25 {
+    margin-right: 25px !important;
+}
+
+.m-r-30 {
+    margin-right: 30px !important;
+}
+
+.m-r-35 {
+    margin-right: 35px !important;
+}
+
+.m-r-40 {
+    margin-right: 40px !important;
+}
+
+.m-r-45 {
+    margin-right: 45px !important;
+}
+
+.m-r-50 {
+    margin-right: 50px !important;
+}
+
+
+/* =================================================================================
+Padding class
+================================================================================= */
+
+
+/*padding all side*/
+
+.p-a-0 {
+    padding: 0px !important;
+}
+
+.p-a-5 {
+    padding: 5px !important;
+}
+
+.p-a-10 {
+    padding: 10px !important;
+}
+
+.p-a-15 {
+    padding: 15px !important;
+}
+
+.p-a-20 {
+    padding: 20px !important;
+}
+
+.p-a-25 {
+    padding: 25px !important;
+}
+
+.p-a-30 {
+    padding: 30px !important;
+}
+
+.p-a-35 {
+    padding: 35px !important;
+}
+
+.p-a-40 {
+    padding: 40px !important;
+}
+
+.p-a-45 {
+    padding: 45px !important;
+}
+
+.p-a-50 {
+    padding: 50px !important;
+}
+
+
+/*padding top*/
+
+.p-t-5 {
+    padding-top: 5px !important;
+}
+
+.p-t-10 {
+    padding-top: 10px !important;
+}
+
+.p-t-15 {
+    padding-top: 15px !important;
+}
+
+.p-t-20 {
+    padding-top: 20px !important;
+}
+
+.p-t-25 {
+    padding-top: 25px !important;
+}
+
+.p-t-30 {
+    padding-top: 30px !important;
+}
+
+.p-t-35 {
+    padding-top: 35px !important;
+}
+
+.p-t-40 {
+    padding-top: 40px !important;
+}
+
+.p-t-45 {
+    padding-top: 45px !important;
+}
+
+.p-t-50 {
+    padding-top: 50px !important;
+}
+
+
+/*padding bottom*/
+
+.p-b-5 {
+    padding-bottom: 5px !important;
+}
+
+.p-b-10 {
+    padding-bottom: 10px !important;
+}
+
+.p-b-15 {
+    padding-bottom: 15px !important;
+}
+
+.p-b-20 {
+    padding-bottom: 20px !important;
+}
+
+.p-b-25 {
+    padding-bottom: 25px !important;
+}
+
+.p-b-30 {
+    padding-bottom: 30px !important;
+}
+
+.p-b-35 {
+    padding-bottom: 35px !important;
+}
+
+.p-b-40 {
+    padding-bottom: 40px !important;
+}
+
+.p-b-45 {
+    padding-bottom: 45px !important;
+}
+
+.p-b-50 {
+    padding-bottom: 50px !important;
+}
+
+
+/*padding left*/
+
+.p-l-5 {
+    padding-left: 5px !important;
+}
+
+.p-l-10 {
+    padding-left: 10px !important;
+}
+
+.p-l-15 {
+    padding-left: 15px !important;
+}
+
+.p-l-20 {
+    padding-left: 20px !important;
+}
+
+.p-l-25 {
+    padding-left: 25px !important;
+}
+
+.p-l-30 {
+    padding-left: 30px !important;
+}
+
+.p-l-35 {
+    padding-left: 35px !important;
+}
+
+.p-l-40 {
+    padding-left: 40px !important;
+}
+
+.p-l-45 {
+    padding-left: 45px !important;
+}
+
+.p-l-50 {
+    padding-left: 50px !important;
+}
+
+
+/*padding right*/
+
+.p-r-5 {
+    padding-right: 5px !important;
+}
+
+.p-r-10 {
+    padding-right: 10px !important;
+}
+
+.p-r-15 {
+    padding-right: 15px !important;
+}
+
+.p-r-20 {
+    padding-right: 20px !important;
+}
+
+.p-r-25 {
+    padding-right: 25px !important;
+}
+
+.p-r-30 {
+    padding-right: 30px !important;
+}
+
+.p-r-35 {
+    padding-right: 35px !important;
+}
+
+.p-r-40 {
+    padding-right: 40px !important;
+}
+
+.p-r-45 {
+    padding-right: 45px !important;
+}
+
+.p-r-50 {
+    padding-right: 50px !important;
+}
+
+
+/* =================================================================================
+Scrollbar(use in right and left sidenav)
+================================================================================= */
+
+.ui-app__scrollbar::-webkit-scrollbar {
+    background: transparent;
+    overflow: visible;
+    width: 12px;
+}
+
+.ui-app__scrollbar::-webkit-scrollbar-thumb {
+    border: 2px solid #ffffff;
+}
+
+.ui-app__scrollbar ::-webkit-scrollbar-track-piece {
+    background: #ffffff;
+}
+
+.ui-app__scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.ui-app__scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.8);
+}
+
+.ui-app__scrollbar::-webkit-scrollbar-thumb:vertical {
+    border-width: 4px 2px;
+    min-height: 40px;
+}
+
+.ui-app__scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+.ui-app__left-sidenav.sidenav ::-webkit-scrollbar-thumb {
+    background-color: #c1c1c1;
+    box-shadow: inset 1px 1px 0 #c1c1c1, inset 0 -1px 0 rgba(0, 0, 0, 0.07);
+    -webkit-box-shadow: inset 1px 1px 0 #c1c1c1, inset 0 -1px 0 rgba(0, 0, 0, 0.07);
+}
+
+.ui-app__scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #b1b0b0;
+}

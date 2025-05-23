@@ -1,0 +1,16 @@
+@charset "utf-8";
+/* CSS Document */
+
+
+.rodape {
+    position: fixed;
+    bottom:0px;
+    width:100%;
+	background-color:#000000;
+	color:#FFF;
+	padding: 5px;
+	margin-top:10px;
+	display: block;
+	z-index: 999;
+	font-size: 11px;
+}

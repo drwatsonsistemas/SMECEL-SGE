@@ -1,0 +1,16 @@
+.footer {
+    background-color: #f1f1f1;
+    padding: 10px;
+    text-align: center;
+}
+
+/* Estilos específicos para impressão */
+@media print {
+    /* Garante que a div de rodapé fique no final da página impressa */
+    .footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+    }
+}

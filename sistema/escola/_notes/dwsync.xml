@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<dwsync>
+<file name="menu-top.php" server="C:/xampp/htdocs/smecel/" local="132813045080130058" remote="132813045080000000" />
+<file name="menu-esc.php" server="C:/xampp/htdocs/smecel/" local="132813755688693104" remote="132813755680000000" />
+<file name="notificacoes.php" server="C:/xampp/htdocs/smecel/" local="132813059070596253" remote="132813059070000000" />
+<file name="turmaListar.php" server="C:/xampp/htdocs/smecel/" local="132813098347656382" remote="132813098340000000" />
+<file name="parecer_turma.php" server="C:/xampp/htdocs/smecel/" local="132573456235346617" remote="132573456230000000" />
+<file name="oficiosCadastrar.php" server="C:/xampp/htdocs/smecel/" local="132563342107486088" remote="132563342100000000" />
+<file name="oficiosEditar.php" server="C:/xampp/htdocs/smecel/" local="132563373915411380" remote="132563373910000000" />
+<file name="diario_turma.php" server="C:/xampp/htdocs/smecel/" local="132566811907265879" remote="132566811900000000" />
+<file name="print_diario_turma.php" server="C:/xampp/htdocs/smecel/" local="132566829137996203" remote="132566829130000000" />
+<file name="atas.php" server="C:/xampp/htdocs/smecel/" local="132597729508067093" remote="132597729500000000" />
+<file name="boletimLancar.php" server="C:/xampp/htdocs/smecel/" local="132569233095765934" remote="132569233090000000" />
+<file name="conselho_lancar.php" server="C:/xampp/htdocs/smecel/" local="132569244077871065" remote="132569244070000000" />
+<file name="menu-dir.php" server="C:/xampp/htdocs/smecel/" local="132244812000000000" remote="132244812000000000" />
+<file name="matriculaExibe.php" server="C:/xampp/htdocs/smecel/" local="132569249140647402" remote="132569249140000000" />
+<file name="vinculoAlunoExibirTurma.php" server="C:/xampp/htdocs/smecel/" local="132569268321524944" remote="132569268320000000" />
+<file name="print_parecer_turma.php" server="C:/xampp/htdocs/smecel/" local="132573455752402809" remote="132573455750000000" />
+<file name="print_resultados_atas.php" server="C:/xampp/htdocs/smecel/" local="132597723551296385" remote="132597723550000000" />
+<file name="ac-professor.php" server="C:/xampp/htdocs/smecel/" local="132609959651348241" remote="132609959650000000" />
+<file name="ava_aulas_professores.php" server="C:/xampp/htdocs/smecel/" local="132609958446569331" remote="132609958440000000" />
+<file name="grafico_rendimento_disciplinas.php" server="C:/xampp/htdocs/smecel/" local="132677350312430742" remote="132677350310000000" />
+<file name="print_rendimentos_unidade.php" server="C:/xampp/htdocs/smecel/" local="132677359268058330" remote="132677359260000000" />
+<file name="rendimento_disciplina_unidade.php" server="C:/xampp/htdocs/smecel/" local="132701551498773125" remote="132701551490000000" />
+<file name="print_rendimento_disciplina_unidade.php" server="C:/xampp/htdocs/smecel/" local="132701572370896942" remote="132701572370000000" />
+<file name="usuLogado.php" server="C:/xampp/htdocs/smecel/" local="132711130200000000" remote="132711130200000000" />
+<file name="index.php" server="C:/xampp/htdocs/smecel/" local="132813792479361708" remote="132813792470000000" />
+<file name="ava_verifica_aulas.php" server="C:/xampp/htdocs/smecel/" local="132724035652369899" remote="132724035650000000" />
+<file name="atualizacoes.php" server="C:/xampp/htdocs/smecel/" local="132741426940277891" remote="132741426940000000" />
+<file name="patrimonio_editar.php" server="C:/xampp/htdocs/smecel/" local="132778447869394550" remote="132778447860000000" />
+<file name="patrimonio.php" server="C:/xampp/htdocs/smecel/" local="132778448493198873" remote="132778448490000000" />
+<file name="tutoriais_video.php" server="C:/xampp/htdocs/smecel/" local="132813051063147741" remote="132813051060000000" />
+<file name="horariosEditar.php" server="C:/xampp/htdocs/smecel/" local="132813212639919299" remote="132813212630000000" />
+<file name="grade.php" server="C:/xampp/htdocs/smecel/" local="132813201748185595" remote="132813201740000000" />
+<file name="gradeCadastrar.php" server="C:/xampp/htdocs/smecel/" local="132813214418948125" remote="132813214410000000" />
+<file name="gradeEditar.php" server="C:/xampp/htdocs/smecel/" local="132813215790913350" remote="132813215790000000" />
+<file name="cargahorariaexcluirHorario.php" server="C:/xampp/htdocs/smecel/" local="132813211332477182" remote="132813211330000000" />
+<file name="alunosFrequencia.php" server="C:/xampp/htdocs/smecel/" local="132813781265120290" remote="132813781260000000" />
+</dwsync>

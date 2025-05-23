@@ -1,0 +1,71 @@
+# Arquivos de backup
+*.bkp
+*[0-9].php
+@*.php
+*_backup*
+*backup*
+*bkp*
+*.mno
+*.mno.php
+*.mno.php.bkp
+*.php.mno
+*.php.mno.bkp
+*.php.mno.php
+*.dat
+*.dat.bkp
+*.map
+
+# Arquivos de banco de dados
+*.sql
+*.sqlite
+*.db
+
+# Arquivos de log
+*.log
+error_log
+access_log*
+
+# Arquivos de imagem
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.ico
+*.bmp
+*.tiff
+*.webp
+*.svg
+
+# Arquivos temporários
+*.tmp
+*.temp
+*.swp
+*~
+
+# Arquivos de cache
+*.cache
+.cache/
+
+# Arquivos de configuração local
+.env
+.env.local
+.env.*.local
+
+# Diretórios de dependências
+vendor/
+node_modules/
+
+# Arquivos de IDE/Editor
+.vscode/
+.idea/
+*.sublime-*
+*.code-workspace
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Arquivos de backup do sistema
+bkpMySql.php
+backupMysql.php
+backup.php

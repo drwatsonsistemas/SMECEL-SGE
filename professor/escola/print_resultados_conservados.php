@@ -1,0 +1,463 @@
+<?php require_once('../../Connections/SmecelNovo.php'); ?>
+<?php //include "fnc/anoLetivo.php"; ?>
+<?php include('fnc/inverteData.php'); ?>
+<?php include "fnc/anti_injection.php"; ?>
+<?php //include('fnc/notas.php'); ?>
+<?php include('../funcoes/url_base.php'); ?>
+<?php include "fnc/calculos.php"; ?>
+<?php include "fnc/session.php"; ?>
+<?php
+if (!function_exists("GetSQLValueString")) {
+  function GetSQLValueString($theValue, $theType, $theDefinedValue = "", $theNotDefinedValue = "")
+  {
+    if (PHP_VERSION < 6) {
+      $theValue = get_magic_quotes_gpc() ? stripslashes($theValue) : $theValue;
+    }
+
+    $theValue = function_exists("mysql_real_escape_string") ? mysql_real_escape_string($theValue) : mysql_escape_string($theValue);
+
+    switch ($theType) {
+      case "text":
+        $theValue = ($theValue != "") ? "'" . $theValue . "'" : "NULL";
+        break;
+      case "long":
+      case "int":
+        $theValue = ($theValue != "") ? intval($theValue) : "NULL";
+        break;
+      case "double":
+        $theValue = ($theValue != "") ? doubleval($theValue) : "NULL";
+        break;
+      case "date":
+        $theValue = ($theValue != "") ? "'" . $theValue . "'" : "NULL";
+        break;
+      case "defined":
+        $theValue = ($theValue != "") ? $theDefinedValue : $theNotDefinedValue;
+        break;
+    }
+    return $theValue;
+  }
+}
+
+$codTurma = "";
+$buscaTurma = "";
+if (isset($_GET['ct'])) {
+
+  if ($_GET['ct'] == "") {
+    //echo "TURMA EM BRANCO";	
+    header("Location: turmasAlunosVinculados.php?nada");
+    exit;
+  }
+
+  $codTurma = anti_injection($_GET['ct']);
+  $codTurma = (int) $codTurma;
+  $buscaTurma = "AND turma_id = $codTurma ";
+}
+
+include "usuLogado.php";
+include "fnc/anoLetivo.php";
+
+$anoLetivo = $row_AnoLetivo['ano_letivo_ano'];
+if (isset($_GET['ano'])) {
+
+  if ($_GET['ano'] == "") {
+    //echo "TURMA EM BRANCO";	
+    header("Location: turmasAlunosVinculados.php?nada");
+    exit;
+  }
+
+  $anoLetivo = anti_injection($_GET['ano']);
+  $anoLetivo = (int) $anoLetivo;
+}
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_EscolaLogada = "
+SELECT escola_id, escola_id_sec, escola_nome, escola_cep, escola_endereco, escola_num, escola_bairro, escola_telefone1, 
+escola_telefone2, escola_email, escola_inep, escola_cnpj, escola_logo, escola_tema,  sec_id, sec_cidade, sec_uf 
+FROM smc_escola
+INNER JOIN smc_sec ON sec_id = escola_id_sec 
+WHERE escola_id = '$row_UsuLogado[usu_escola]'";
+$EscolaLogada = mysql_query($query_EscolaLogada, $SmecelNovo) or die(mysql_error());
+$row_EscolaLogada = mysql_fetch_assoc($EscolaLogada);
+$totalRows_EscolaLogada = mysql_num_rows($EscolaLogada);
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_AlunoBoletim = "
+SELECT vinculo_aluno_id, vinculo_aluno_id_aluno, vinculo_aluno_id_turma, vinculo_aluno_id_escola, 
+vinculo_aluno_ano_letivo, vinculo_aluno_transporte, vinculo_aluno_data, vinculo_aluno_hash, vinculo_aluno_reprovado_faltas,vinculo_aluno_nao_reprova,
+vinculo_aluno_verificacao, vinculo_aluno_boletim, vinculo_aluno_situacao, vinculo_aluno_datatransferencia, vinculo_aluno_conselho, vinculo_aluno_resultado_final,
+aluno_id, aluno_nome, aluno_nome_social, aluno_nascimento, aluno_filiacao1, aluno_foto, aluno_hash,
+turma_id, turma_nome, turma_matriz_id, turma_turno, turma_etapa, turma_resultado_consolidado,
+matriz_id, matriz_criterio_avaliativo, ca_id, ca_qtd_periodos, ca_questionario_conceitos, ca_forma_avaliacao,
+CASE vinculo_aluno_situacao
+WHEN 1 THEN 'MATRICULADO(A)'
+WHEN 2 THEN '<span class=\"ls-color-danger\">TRANSFERIDO(A)</span>'
+WHEN 3 THEN '<span class=\"ls-color-danger\">DESISTENTE</span>'
+WHEN 4 THEN 'FALECIDO(A)'
+WHEN 5 THEN 'OUTROS'
+END AS vinculo_aluno_situacao_nome
+FROM 
+smc_vinculo_aluno
+INNER JOIN smc_aluno ON aluno_id = vinculo_aluno_id_aluno 
+INNER JOIN smc_turma ON turma_id = vinculo_aluno_id_turma 
+INNER JOIN smc_matriz ON matriz_id = turma_matriz_id
+INNER JOIN smc_criterios_avaliativos ON ca_id = matriz_criterio_avaliativo
+WHERE vinculo_aluno_ano_letivo = '$anoLetivo' AND vinculo_aluno_id_escola = '$row_UsuLogado[usu_escola]' $buscaTurma
+ORDER BY turma_turno ASC, turma_etapa ASC, turma_nome ASC, aluno_nome ASC";
+$AlunoBoletim = mysql_query($query_AlunoBoletim, $SmecelNovo) or die(mysql_error());
+$row_AlunoBoletim = mysql_fetch_assoc($AlunoBoletim);
+$totalRows_AlunoBoletim = mysql_num_rows($AlunoBoletim);
+
+if ($totalRows_AlunoBoletim == "") {
+  //echo "TURMA EM BRANCO";	
+  //header("Location: turmasAlunosVinculados.php?nada"); 
+
+  echo "<h3><center>Sem dados.<br><a href=\"javascript:window.close()\">Fechar</a></center></h3>";
+  echo "";
+
+  exit;
+}
+
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_Etapas = "SELECT etapa_id, etapa_id_filtro, etapa_nome FROM smc_etapa ORDER BY etapa_id ASC";
+$Etapas = mysql_query($query_Etapas, $SmecelNovo) or die(mysql_error());
+$row_Etapas = mysql_fetch_assoc($Etapas);
+$totalRows_Etapas = mysql_num_rows($Etapas);
+
+if ($row_AlunoBoletim['turma_resultado_consolidado'] == "N" && $row_AlunoBoletim['ca_forma_avaliacao'] == "N" or $row_AlunoBoletim['ca_forma_avaliacao'] == "Q") {
+  //echo "TURMA EM BRANCO";	
+  //header("Location: turmasAlunosVinculados.php?nada"); 
+
+  //echo "<h3><center>Turma não consolidada. Consolide <br><a href='consolidar_resultados_finais.php'>aqui</a> para visualizar os dados</center></h3>";
+  //echo "";
+
+  //exit;
+}
+
+?>
+<!DOCTYPE html>
+<html class="<?php echo $row_EscolaLogada['escola_tema']; ?>" lang="pt-br">
+
+<head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-117872281-1"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'UA-117872281-1');
+  </script>
+  <title>RESULTADO FINAL - <?php echo $row_AlunoBoletim['turma_nome'] ?> - ANO LETIVO
+    <?php echo $row_AlunoBoletim['vinculo_aluno_ano_letivo'] . " - " . $row_EscolaLogada['escola_nome'] ?>
+  </title>
+  <meta charset="utf-8">
+  <meta content="IE=edge,chrome=1" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <link rel="stylesheet" type="text/css" href="css/locastyle.css">
+  <script src="js/locastyle.js"></script>
+  <style>
+    table.bordasimples {
+      border-collapse: collapse;
+      font-size: 7px;
+      padding: 5px;
+    }
+
+    table.bordasimples tr td {
+      border: 1px solid #808080;
+      padding: 5px;
+      font-size: 12px;
+    }
+
+    table.bordasimples tr th {
+      border: 1px solid #808080;
+      padding: 5px;
+      font-size: 20px;
+    }
+
+
+
+    .foo {
+      writing-mode: vertical-lr;
+      -webkit-writing-mode: vertical-lr;
+      -ms-writing-mode: vertical-lr;
+      /* 	-webkit-transform:rotate(180deg); //tente 90 no lugar de 270
+  -moz-transform:rotate(180deg);
+  -o-transform: rotate(180deg); */
+
+    }
+  </style>
+  <link rel="apple-touch-icon" sizes="180x180" href="https://www.smecel.com.br/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://www.smecel.com.br/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://www.smecel.com.br/favicon-16x16.png">
+  <link rel="manifest" href="https://www.smecel.com.br/site.webmanifest">
+</head>
+
+<body onload="self.print();">
+  <div class="container-fluid">
+
+
+    <div style="page-break-inside: avoid;">
+
+      <div class="ls-box1">
+
+        <?php if ($row_EscolaLogada['escola_logo'] <> "") { ?>
+          <img src="../../img/logo/<?php echo $row_EscolaLogada['escola_logo']; ?>" alt="" width="80px"
+            class="ls-float-left" />
+        <?php } else { ?>
+          <img src="../../img/brasao_republica.png" alt="" width="80px" class="ls-float-left" />
+        <?php } ?>
+        <br>
+        <strong><?php echo $row_EscolaLogada['escola_nome']; ?></strong><br>
+        <small>INEP: <?php echo $row_EscolaLogada['escola_inep']; ?> AUT: - D.O. -<br>
+          ENDEREÇO: <?php echo $row_EscolaLogada['escola_endereco']; ?>, <?php echo $row_EscolaLogada['escola_num']; ?>,
+          <?php echo $row_EscolaLogada['escola_bairro']; ?>
+          <?php echo $row_EscolaLogada['sec_cidade']; ?>-<?php echo $row_EscolaLogada['sec_uf']; ?> CEP:
+          <?php echo $row_EscolaLogada['escola_cep']; ?><br>
+          CNPJ: <?php echo $row_EscolaLogada['escola_cnpj']; ?> <?php echo $row_EscolaLogada['escola_email']; ?>
+          <?php echo $row_EscolaLogada['escola_telefone1']; ?></small>
+
+        <br><br>
+
+        <h3 class="ls-txt-center">RESULTADO FINAL | ANO LETIVO
+          <?php echo $row_AlunoBoletim['vinculo_aluno_ano_letivo']; ?>
+        </h3>
+        <h2 class="ls-txt-center"><?php echo $row_AlunoBoletim['turma_nome']; ?></h2>
+
+        <br><br>
+
+
+
+        <table width="100%" class="ls-sm-space ls-table-striped bordasimples">
+
+
+          <tr>
+            <th width="50px">Nº</th>
+            <th width="350px">ALUNO</th>
+
+            <th>RESULTADO FINAL</th>
+
+          </tr>
+
+
+          <?php
+
+          $matriculado = 0;
+          $transferido = 0;
+          $desistente = 0;
+          $falecido = 0;
+          $outros = 0;
+
+          $aprovados_turma = 0;
+          $aprovados_turma_conselho = 0;
+          $reprovados_turma = 0;
+          $aprovados_escola = 0;
+          $reprovados_escola = 0;
+          ?>
+
+          <?php
+          $num = 1;
+          do { ?>
+
+
+            <tr>
+              <td class="ls-txt-center"><?php echo $num;
+              $num++ ?></td>
+              <td class="ls-txt-left"><?php echo $row_AlunoBoletim['aluno_nome_social']!= ""? $row_AlunoBoletim["aluno_nome_social"]: $row_AlunoBoletim["aluno_nome"]; ?></td>
+
+
+
+
+              <td>
+                <?php
+                if ($row_AlunoBoletim['vinculo_aluno_situacao'] == '1') { // Situação "matriculado"
+                  if ($row_AlunoBoletim['ca_forma_avaliacao'] == "C") { // Avaliação por conceito
+                    if ($row_AlunoBoletim['vinculo_aluno_reprovado_faltas'] == "S") {
+                      echo "REPROVADO(A)";
+                      $reprovados_turma++;
+                    } else {
+                      echo "APROVADO(A)";
+                      $aprovados_turma++;
+                    }
+                  } else { // Outra forma de avaliação
+                    if ($row_AlunoBoletim['vinculo_aluno_resultado_final'] == 1) { // Resultado final: aprovado
+                      echo "APROVADO(A)";
+                      if ($row_AlunoBoletim['vinculo_aluno_conselho'] == "S") {
+                        echo " PELO CONSELHO";
+                        $aprovados_turma_conselho++;
+                      } else {
+                        $aprovados_turma++;
+                      }
+                    } elseif ($row_AlunoBoletim['vinculo_aluno_nao_reprova'] == "S") {
+                      // Aluno "especial" (não reprova)
+                      echo "APROVADO(A)";
+                      $aprovados_turma++;
+                    } else {
+                      // Caso contrário, aluno conservado (reprovado)
+                      echo "<span style='color:red;'>CONSERVADO(A)</span>";
+                      $reprovados_turma++;
+                    }
+                  }
+                } else if ($row_AlunoBoletim['vinculo_aluno_situacao'] == '2') {
+                  echo $row_AlunoBoletim['vinculo_aluno_situacao_nome'];
+                } else if ($row_AlunoBoletim['vinculo_aluno_situacao'] == '3') {
+                  echo $row_AlunoBoletim['vinculo_aluno_situacao_nome'];
+                } else if ($row_AlunoBoletim['vinculo_aluno_situacao'] == '4') {
+                  echo $row_AlunoBoletim['vinculo_aluno_situacao_nome'];
+                }
+
+
+
+                ?>
+              </td>
+
+
+
+            </tr>
+
+
+            <?php
+
+            switch ($row_AlunoBoletim['vinculo_aluno_situacao']) {
+              case 1:
+                $matriculado++;
+                break;
+              case 2:
+                $transferido++;
+                break;
+              case 3:
+                $desistente++;
+                break;
+              case 4:
+                $falecido++;
+                break;
+              case 5:
+                $outros++;
+                break;
+            }
+
+
+            ?>
+
+
+          <?php } while ($row_AlunoBoletim = mysql_fetch_assoc($AlunoBoletim)); ?>
+      </div>
+      </table>
+
+      <br>
+
+      <p>APROVADOS: <?php echo $aprovados_turma; ?> | APROVADOS PELO CONSELHO: <?php echo $aprovados_turma_conselho; ?>
+        | CONSERVADOS: <?php echo $reprovados_turma; ?></p>
+      <p>
+        MATRICULADO: <?php echo $matriculado; ?> |
+        TRANSFERIDO: <?php echo $transferido; ?> |
+        DESISTENTE: <?php echo $desistente; ?> |
+        FALECIDO: <?php echo $falecido; ?> |
+        OUTROS: <?php echo $outros; ?> |
+      </p>
+      <p class="ls-txt-right">Impresso em <?php echo date("d/m/Y à\s H\hi "); ?> | SMECEL - Sistema de Gestão Escolar
+      </p>
+
+
+
+
+      <p>
+
+
+        <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+
+
+        <script type="text/javascript">
+          google.charts.load('current', { 'packages': ['corechart'] });
+          google.charts.setOnLoadCallback(drawChart);
+
+          function drawChart() {
+
+            var data = google.visualization.arrayToDataTable([
+              ['SITUAÇÃO', 'TOTAL'],
+              ['APROVADOS (<?php echo $aprovados_turma; ?>)', <?php echo $aprovados_turma; ?>],
+              ['APR. PELO CONSELHO (<?php echo $aprovados_turma_conselho; ?>)', <?php echo $aprovados_turma_conselho; ?>],
+              ['CONSERVADOS (<?php echo $reprovados_turma; ?>)', <?php echo $reprovados_turma; ?>]
+            ]);
+
+            var options = {
+              title: 'APROVADOS/REPROVADOS'
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('piechart_resultado'));
+
+            chart.draw(data, options);
+          }
+        </script>
+
+
+        <script type="text/javascript">
+          google.charts.load('current', { 'packages': ['corechart'] });
+          google.charts.setOnLoadCallback(drawChart);
+
+          function drawChart() {
+
+            var data = google.visualization.arrayToDataTable([
+              ['SITUAÇÃO', 'TOTAL'],
+              ['MATRICULADOS', <?php echo $matriculado; ?>],
+              ['TRANSFERIDOS', <?php echo $transferido; ?>],
+              ['DESISTENTES', <?php echo $desistente; ?>],
+              ['FALECIDOS', <?php echo $falecido; ?>],
+              ['OUTROS', <?php echo $outros; ?>]
+            ]);
+
+            var options = {
+              title: 'TOTALIZADOR'
+            };
+
+            var chart = new google.visualization.PieChart(document.getElementById('piechart'));
+
+            chart.draw(data, options);
+          }
+        </script>
+
+
+        <!--
+
+<div class="row">
+  <div class="col-md-6 col-sm-12">
+  <div id="piechart_resultado" style="width: 100%; height: 500px;"></div>    
+
+  </div>
+  <div class="col-md-6 col-sm-12">
+  <div id="piechart" style="width: 100%; height: 500px;"></div>
+  </div>
+    </div>
+    
+    -->
+
+
+
+
+
+      </p>
+
+
+    </div>
+
+    <!-- CONTEÚDO -->
+  </div>
+
+  <!-- We recommended use jQuery 1.10 or up -->
+  <script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+  <script src="js/locastyle.js"></script>
+</body>
+
+</html>
+<?php
+mysql_free_result($UsuLogado);
+
+mysql_free_result($EscolaLogada);
+
+mysql_free_result($AlunoBoletim);
+
+
+?>

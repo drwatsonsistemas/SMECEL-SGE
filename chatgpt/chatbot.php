@@ -1,0 +1,51 @@
+<?php
+    $apiKey = '';
+
+    function getChatGPTResponse($message) {
+        global $apiKey;
+        $url = 'https://api.openai.com/v1/engines/davinci-codex/completions';
+        $headers = array(
+            'Content-Type: application/json',
+            'Authorization: Bearer '.$apiKey
+        );
+        $data = array(
+            'prompt' => $message,
+            'max_tokens' => 150,
+            'temperature' => 0.5,
+            'n' => 1,
+            'stop' => "\n"
+        );
+        $postFields = json_encode($data);
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => $url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => "",
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 30,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => "POST",
+            CURLOPT_POSTFIELDS => $postFields,
+            CURLOPT_HTTPHEADER => $headers
+        ));
+        $response = curl_exec($curl);
+        $err = curl_error($curl);
+        curl_close($curl);
+        if ($err) {
+            return "Erro: " . $err;
+        } else {
+            $jsonResponse = json_decode($response);
+            $chatGPTResponse = $jsonResponse->choices[0]->text;
+            return $chatGPTResponse;
+        }
+    }
+
+    // Recebe a entrada do usuário
+    $userInput = $_GET['userInput'];
+
+    // Envia a entrada do usuário para o ChatGPT e recebe a resposta
+    $chatGPTResponse = getChatGPTResponse($userInput);
+
+    // Retorna a resposta do ChatGPT para o usuário
+    echo $chatGPTResponse;
+?>

@@ -1,0 +1,188 @@
+<?php require_once('../Connections/SmecelNovo.php'); ?>
+<?php
+if (!function_exists("GetSQLValueString")) {
+function GetSQLValueString($theValue, $theType, $theDefinedValue = "", $theNotDefinedValue = "") 
+{
+  if (PHP_VERSION < 6) {
+    $theValue = get_magic_quotes_gpc() ? stripslashes($theValue) : $theValue;
+  }
+
+  $theValue = function_exists("mysql_real_escape_string") ? mysql_real_escape_string($theValue) : mysql_escape_string($theValue);
+
+  switch ($theType) {
+    case "text":
+      $theValue = ($theValue != "") ? "'" . $theValue . "'" : "NULL";
+      break;    
+    case "long":
+    case "int":
+      $theValue = ($theValue != "") ? intval($theValue) : "NULL";
+      break;
+    case "double":
+      $theValue = ($theValue != "") ? doubleval($theValue) : "NULL";
+      break;
+    case "date":
+      $theValue = ($theValue != "") ? "'" . $theValue . "'" : "NULL";
+      break;
+    case "defined":
+      $theValue = ($theValue != "") ? $theDefinedValue : $theNotDefinedValue;
+      break;
+  }
+  return $theValue;
+}
+}
+?>
+<?php
+
+
+  function anti_injection($sql){
+   $sql = preg_replace(sql_regcase("/(from|select|insert|delete|where|drop table|show tables|#|\*|--|\\\\)/"), "" ,$sql);
+   $sql = trim($sql);
+   $sql = strip_tags($sql);
+   $sql = (get_magic_quotes_gpc()) ? $sql : addslashes($sql);
+   return $sql;
+  }
+
+
+if (empty($_POST['email'])) {
+		
+		echo "<div class=\"card-panel red darken-4\" style=\"color:white\"><i class=\"material-icons\">error_outline</i> Informe um e-mail.</div>";
+		exit;
+	
+	} else if (!filter_var($_POST['email'], FILTER_VALIDATE_EMAIL)) {
+  
+ 
+ 	echo "<div class=\"card-panel red darken-4\" style=\"color:white\"><i class=\"material-icons\">error_outline</i> Este e-mail não é válido.</div>";
+ 	exit;
+ 
+	} else {
+  
+ 
+   $email_busca = anti_injection($_POST['email']);  
+   //$email = "rafael_fua@hotmail.com";  
+  //FALTA TRATAR CONTRA SQL-INJECTION
+   
+ 
+mysql_select_db($database_SmecelNovo, $SmecelNovo);
+$query_verifica = "SELECT func_id, func_nome, func_email, func_senha, func_senha_ativa FROM smc_func WHERE func_email='$email_busca'";
+$verifica = mysql_query($query_verifica, $SmecelNovo) or die(mysql_error());
+$row_verifica = mysql_fetch_assoc($verifica);
+$totalRows_verifica = mysql_num_rows($verifica);
+
+$codigo = $row_verifica['func_id'];
+$nome = $row_verifica['func_nome'];	
+$email = $row_verifica['func_email'];
+$senha = $row_verifica['func_senha'];
+$ativo = $row_verifica['func_senha_ativa'];
+  
+  // Verifica se o nome foi preenchido
+if (empty($email_busca)) {
+	echo "<div class=\"card-panel red darken-4 right-align\" style=\"color:white\"><i class=\"material-icons right-align\">error_outline</i> O campo E-mail não pode ficar em branco.</div>";
+	echo "
+	<script> 
+	//document.location = 'sistema/index.php'; 
+	window.setTimeout(\"document.location='index.php'\",3000)
+	</script>
+	";
+} else if ($totalRows_verifica == 0) {	
+	echo "<div class=\"card-panel red darken-4\" style=\"color:white\"><i class=\"material-icons\">error_outline</i>E-mail não encontrado.</div>";
+echo "
+	<script> 
+	//document.location = 'sistema/index.php'; 
+	window.setTimeout(\"document.location='index.php'\",3000)
+	</script>
+	";	
+} else if ($ativo == 0) {	
+	echo "<div class=\"card-panel red darken-4\" style=\"color:white\">Seu cadastro não está ativo para acessar o Painel do Professor. Solicite o cadastro na secretaria de sua escola.</div>";
+echo "
+	<script> 
+	//document.location = 'sistema/index.php'; 
+	window.setTimeout(\"document.location='index.php'\",5000)
+	</script>
+	";	
+} else {
+	
+	// Inclui o arquivo class.phpmailer.php localizado na pasta class
+require_once("../classes/class.phpmailer.php");
+ 
+// Inicia a classe PHPMailer
+$mail = new PHPMailer(true);
+ 
+// Define os dados do servidor e tipo de conexão
+// =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+$mail->IsSMTP(); // Define que a mensagem será SMTP
+ 
+try {
+     $mail->Host = 'email-ssl.com.br'; // Endereço do servidor SMTP (Autenticação, utilize o host smtp.seudomínio.com.br)
+     //$mail->Host = 'smtp.smecel.com.br'; // Endereço do servidor SMTP (Autenticação, utilize o host smtp.seudomínio.com.br)
+     //$mail->Host = 'smtplw.com.br'; // Endereço do servidor SMTP (Autenticação, utilize o host smtp.seudomínio.com.br)
+     $mail->SMTPAuth   = true;  // Usar autenticação SMTP (obrigatório para smtp.seudomínio.com.br)
+     $mail->Port       = 587; //  Usar 587 porta SMTP
+     $mail->Username = 'suporte@smecel.com.br'; // Usuário do servidor SMTP (endereço de email)
+     $mail->Password = 'Drw4tson@smecel'; // Senha do servidor SMTP (senha do email usado)
+	 $mail->IsHTML(true);
+	 $mail->CharSet = "UTF-8";
+ 
+     //Define o remetente
+     // =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=    
+     $mail->SetFrom('suporte@smecel.com.br', 'Suporte SMECEL'); //Seu e-mail
+     //$mail->AddReplyTo('seu@e-mail.com.br', 'Nome'); //Seu e-mail
+     $mail->Subject = "Recuperação da senha de acesso ao Painel do Professor [SMECEL]";//Assunto do e-mail
+ 
+ 
+     //Define os destinatário(s)
+     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+     $mail->AddAddress($email);
+ 
+     //Campos abaixo são opcionais 
+     //=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+     //$mail->AddCC('destinarario@dominio.com.br', 'Destinatario'); // Copia
+     $mail->AddBCC('rafael_fua@hotmail.com', 'Rafael Amaral'); // Cópia Oculta
+     //$mail->AddAttachment('images/phpmailer.gif');      // Adicionar um anexo
+ 
+ 
+     //Define o corpo do email
+     $mail->MsgHTML("
+	 
+	 <p>Prezado(a) $nome,</p>
+	 <p>Você solicitou a recuperação de senha para o Painel do Professor.</p>
+	 <p>Seus dados de acesso são:</p>
+
+
+   <p>Código: <strong>$codigo</strong><br>
+	 E-mail: <strong>$email</strong><br>
+	 Senha: <strong>$senha</strong>
+	 </p>
+	 
+	 <p>Você poderá alterar a senha atual para outra de sua escolha assim que acessar seu painel.</p>
+
+   
+	 <p>Atenciosamente,<br>Equipe de suporte.<br>www.smecel.com.br</p>
+	 <img src=\"http://www.smecel.com.br/img/logo_smecel_email.png\" width=\"150\">
+	 "); 
+ 
+     ////Caso queira colocar o conteudo de um arquivo utilize o método abaixo ao invés da mensagem no corpo do e-mail.
+     //$mail->MsgHTML(file_get_contents('arquivo.html'));
+ 
+     $mail->Send();
+     echo "<div class=\"card-panel green darken-3 left\"><strong style=\"color:white\">E-mail de recuperação enviado com sucesso. Aguarde alguns instantes e verifique sua caixa postal.</strong></div>";
+ 		
+	 $mail->ClearAllRecipients();
+     $mail->ClearAttachments();
+		
+    //caso apresente algum erro é apresentado abaixo com essa exceção.
+    }catch (phpmailerException $e) {
+      echo $e->errorMessage(); //Mensagem de erro costumizada do PHPMailer
+}
+	
+	echo "
+	<script> 
+	//document.location = 'sistema/index.php'; 
+	window.setTimeout(\"document.location='index.php'\",3000)
+	</script>
+	";
+  
+    //header("Location: ". $MM_redirectLoginFailed );
+  }
+} 
+
+?>
